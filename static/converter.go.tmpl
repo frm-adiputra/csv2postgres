@@ -53,7 +53,7 @@ func (c Converter) Convert(fields map[string]interface{}) (map[string]interface{
 	if fields["{{.Name}}"] == "" {
 		return nil, utils.ErrEmptyValue("{{.Name}}")
 	}
-	v{{upperCaseFirst .Name}}, err := strconv.ParseInt(fields["{{.Name}}".(string)], 10, 32)
+	v{{upperCaseFirst .Name}}, err := strconv.ParseInt(fields["{{.Name}}"].(string), 10, 32)
 	if err != nil {
 		return nil, utils.FieldError{Field: "{{.Name}}", Message: err.Error()}
 	}
