@@ -1,0 +1,13 @@
+source: constraints.csv
+separator: ","
+fields:
+  - name: a
+    type: varchar(3)
+    required: true
+  - name: b
+    type: text
+    required: true
+table: constraints
+constraints:
+  - PRIMARY KEY (a, b)
+  - FOREIGN KEY (a, b) REFERENCES schema.other_table (c, d)

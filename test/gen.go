@@ -17,11 +17,12 @@ func main() {
 
 func generateDemo() {
 	g := csv2postgres.Generator{
-		BaseImportPath: "github.com/frm-adiputra/csv2postgres/test",
+		BaseImportPath: "github.com/frm-adiputra/csv2postgres/test/generated",
 		OutDir:         "generated",
 		Specs: []string{
 			"specs/noValidator.yaml",
 			"specs/requiredField.yaml",
+			"specs/constraints.yaml",
 		},
 	}
 	err := g.Generate()

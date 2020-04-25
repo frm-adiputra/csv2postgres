@@ -37,6 +37,7 @@ type specTemplateData struct {
 	HasValidation     bool
 	Table             *tableTemplateData
 	DependsOn         []string
+	Constraints       []string
 }
 
 type fieldTemplateData struct {
@@ -116,6 +117,7 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 			HasValidation:     hasValidation,
 			Table:             tableData,
 			DependsOn:         s.DependsOn,
+			Constraints:       s.Constraints,
 		}
 	}
 	return &templateData{

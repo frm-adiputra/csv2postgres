@@ -79,6 +79,10 @@ type Spec struct {
 	// DependsOn specifies other spec name that the table in this spec depends
 	// on.
 	DependsOn []string `yaml:"dependsOn,flow"`
+
+	// Constraints sepecifies the table constraints. It must be written using
+	// syntax like in the table constraints of create table PostgreSQL clause.
+	Constraints []string `yaml:",flow"`
 }
 
 // NewSpec creates a new spec from a YAML file.
