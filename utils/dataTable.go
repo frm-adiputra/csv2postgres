@@ -121,8 +121,8 @@ func StringToNullString(s string) (sql.NullString, error) {
 }
 
 // StringToTime converts string to time.Time
-func StringToTime(s, layout string) (time.Time, error) {
-	return time.Parse(s, layout)
+func StringToTime(layout, s string) (time.Time, error) {
+	return time.Parse(layout, s)
 }
 
 // StringToNullTime converts string to sql.NullTime
@@ -131,7 +131,7 @@ func StringToNullTime(layout, s string) (sql.NullTime, error) {
 		return sql.NullTime{}, nil
 	}
 
-	v, err := time.Parse(s, layout)
+	v, err := time.Parse(layout, s)
 	if err != nil {
 		return sql.NullTime{}, err
 	}
