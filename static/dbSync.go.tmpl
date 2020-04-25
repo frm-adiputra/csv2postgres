@@ -64,7 +64,7 @@ func NewDBSynchronizer() DBSynchronizer {
                 "{{.Name}}" {{.Type}}
             {{- end}}
             {{- range .Constraints}},
-                CONSTRAINT {{.}}
+                {{.}}
             {{- end}}
             {{- $first := false}}
             )
