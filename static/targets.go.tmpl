@@ -6,17 +6,26 @@ package main
 
 import (
     "github.com/magefile/mage/mg"
+    {{- range .Specs}}
     "{{.ImportPath}}"
+    {{- end}}
 )
 
-var {{.PkgVar}}DB {{.PkgVar}}.DBSynchronizer
+var (
+    {{- range .Specs}}
+    {{.PkgVar}}DB {{.PkgVar}}.DBSynchronizer
+    {{- end}}
+)
 
 func init() {
+    {{- range .Specs}}
     {{.PkgVar}}DB = {{.PkgVar}}.NewDBSynchronizer()
+    {{- end}}
 }
-
+{{range .Specs}}
 type {{upperCaseFirst .Name}} mg.Namespace
-
+{{- end}}
+{{range .Specs}}
 // Drop drops table {{.Name}}
 func (t {{upperCaseFirst .Name}}) Drop() error {
     db, err := newDBConn()
@@ -66,3 +75,4 @@ func (t {{upperCaseFirst .Name}}) Up() error {
     )
     return nil
 }
+{{end -}}

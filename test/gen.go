@@ -21,6 +21,7 @@ func generateDemo() {
 		OutDir:         "generated",
 		Specs: []string{
 			"specs/noValidator.yaml",
+			"specs/requiredField.yaml",
 		},
 	}
 	err := g.Generate()

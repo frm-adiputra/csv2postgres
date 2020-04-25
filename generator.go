@@ -35,6 +35,11 @@ func (g Generator) Generate() error {
 	if err != nil {
 		return err
 	}
+
+	err = g.generateMageTargets(td)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -89,14 +94,24 @@ func (g Generator) generateBasedOnSpec(specsTD []specTemplateData) error {
 			}
 		}
 
-		err = execTemplate(
-			filepath.Join(
-				std.RootPkgDir,
-				generatedFilename(lowerCaseFirst(std.Name)+"Targets.go")),
-			"targets.go", std)
-		if err != nil {
-			return err
-		}
+		// err = execTemplate(
+		// 	filepath.Join(
+		// 		std.RootPkgDir,
+		// 		generatedFilename(lowerCaseFirst(std.Name)+"Targets.go")),
+		// 	"targets.go", std)
+		// if err != nil {
+		// 	return err
+		// }
+	}
+	return nil
+}
+
+func (g Generator) generateMageTargets(td *templateData) error {
+	err := execTemplate(
+		filepath.Join(g.OutDir, generatedFilename("targets.go")),
+		"targets.go", td)
+	if err != nil {
+		return err
 	}
 	return nil
 }

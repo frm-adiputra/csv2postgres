@@ -3,6 +3,8 @@ separator: ","
 fields:
   - name: a
     type: varchar(3)
+    required: true
   - name: b
     type: text
-table: noTable
+    required: true
+table: requiredField
