@@ -20,14 +20,14 @@ func init() {
 		"tableName":      tableName,
 		"schemaName":     schemaName,
 	})
-	addTemplate(tmpl, "runner.go", "templates/runner.go.tmpl")
-	addTemplate(tmpl, "csvReader.go", "templates/csvReader.go.tmpl")
-	addTemplate(tmpl, "fieldProvider.go", "templates/fieldProvider.go.tmpl")
-	addTemplate(tmpl, "converter.go", "templates/converter.go.tmpl")
-	addTemplate(tmpl, "computer.go", "templates/computer.go.tmpl")
-	addTemplate(tmpl, "validator.go", "templates/validator.go.tmpl")
-	addTemplate(tmpl, "dbSync.go", "templates/dbSync.go.tmpl")
-	addTemplate(tmpl, "targets.go", "templates/targets.go.tmpl")
+	addTemplate(tmpl, "runner.go", "/templates/runner.go.tmpl")
+	addTemplate(tmpl, "csvReader.go", "/templates/csvReader.go.tmpl")
+	addTemplate(tmpl, "fieldProvider.go", "/templates/fieldProvider.go.tmpl")
+	addTemplate(tmpl, "converter.go", "/templates/converter.go.tmpl")
+	addTemplate(tmpl, "computer.go", "/templates/computer.go.tmpl")
+	addTemplate(tmpl, "validator.go", "/templates/validator.go.tmpl")
+	addTemplate(tmpl, "dbSync.go", "/templates/dbSync.go.tmpl")
+	addTemplate(tmpl, "targets.go", "/templates/targets.go.tmpl")
 }
 
 func addTemplate(t *template.Template, name, path string) {
