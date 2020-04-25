@@ -74,12 +74,10 @@ type Spec struct {
 	ComputePackage string `yaml:"computePackage"`
 
 	ComputedFields []*ComputedField `yaml:"computedFields,flow"`
-	Table          *Table
-}
+	Table          string
 
-// Table specifies table specification
-type Table struct {
-	Name      string
+	// DependsOn specifies other spec name that the table in this spec depends
+	// on.
 	DependsOn []string `yaml:"dependsOn,flow"`
 }
 

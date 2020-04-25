@@ -59,10 +59,10 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
 
 // Up recreates and fill rows of table {{.Name}}
 func (t {{upperCaseFirst .Name}}) Up() error {
-   mg.SerialDeps(
-       {{upperCaseFirst .Name}}.Drop,
-       {{upperCaseFirst .Name}}.Create,
-       {{upperCaseFirst .Name}}.Fill,
-   )
-   return nil
+    mg.SerialDeps(
+        {{upperCaseFirst .Name}}.Drop,
+        {{upperCaseFirst .Name}}.Create,
+        {{upperCaseFirst .Name}}.Fill,
+    )
+    return nil
 }

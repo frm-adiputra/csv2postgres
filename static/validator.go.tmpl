@@ -2,13 +2,12 @@
 
 package {{.PkgVar}}
 
+{{- if .HasValidation}}
 import (
     "fmt"
-
-    {{- if .HasValidation}}
     "github.com/go-ozzo/ozzo-validation/v4"
-    {{- end}}
 )
+{{- end}}
 
 // Validator implements pipeline.Validator interface.
 type Validator struct {}

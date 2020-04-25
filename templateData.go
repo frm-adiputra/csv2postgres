@@ -35,7 +35,8 @@ type specTemplateData struct {
 	RequireTimePkg    bool
 	ComputeFns        []*computeFnTemplateData
 	HasValidation     bool
-	Table             *spec.Table
+	Table             *tableTemplateData
+	DependsOn         []string
 }
 
 type fieldTemplateData struct {
@@ -54,7 +55,18 @@ type computeFnTemplateData struct {
 	ReturnType   string
 }
 
+type tableTemplateData struct {
+	Name           string
+	QuotedFullName string
+	SchemaName     string
+	TableName      string
+}
+
 func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
+	err := checkDuplicateTableNames(specs)
+	if err != nil {
+		return nil, err
+	}
 	csa := make([]specTemplateData, len(specs))
 	errStr := "generating code for '%s': %w"
 	for i, s := range specs {
@@ -69,6 +81,11 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 		}
 
 		computeFns, err := computeFns(fields, computedFields)
+		if err != nil {
+			return nil, fmt.Errorf(errStr, s.SpecFile, err)
+		}
+
+		tableData, err := createTableTemplateData(s.Table)
 		if err != nil {
 			return nil, fmt.Errorf(errStr, s.SpecFile, err)
 		}
@@ -97,7 +114,8 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 			RequireTimePkg:    requireTimePkg,
 			ComputeFns:        computeFns,
 			HasValidation:     hasValidation,
-			Table:             s.Table,
+			Table:             tableData,
+			DependsOn:         s.DependsOn,
 		}
 	}
 	return &templateData{
@@ -105,6 +123,19 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 		Specs:     csa,
 		PkgVar:    strings.ToLower(path.Base(g.BaseImportPath)),
 	}, nil
+}
+
+func checkDuplicateTableNames(specs []*spec.Spec) error {
+	m := make(map[string]bool)
+	for _, s := range specs {
+		_, found := m[s.Table]
+		if found {
+			return fmt.Errorf("duplicate table name '%s' in '%s'",
+				s.Table, s.SpecFile)
+		}
+		m[s.Table] = true
+	}
+	return nil
 }
 
 func createFieldsTemplateData(fs []*spec.Field) ([]*fieldTemplateData, error) {
@@ -293,4 +324,34 @@ func hasValidation(fs []*spec.Field, cfs []*spec.ComputedField) bool {
 	}
 
 	return false
+}
+
+func createTableTemplateData(table string) (*tableTemplateData, error) {
+	quotedFullName, schemaName, tableName, err := parseTableName(table)
+	if err != nil {
+		return nil, err
+	}
+	return &tableTemplateData{
+		Name:           table,
+		QuotedFullName: quotedFullName,
+		SchemaName:     schemaName,
+		TableName:      tableName,
+	}, nil
+}
+
+func parseTableName(s string) (quotedFullName, schemaName, tableName string, err error) {
+	a := strings.Split(s, ".")
+	if len(a) > 2 {
+		return "", "", "", fmt.Errorf("invalid table name: %s", s)
+	}
+
+	if len(a) == 2 {
+		schemaName = a[0]
+		tableName = a[1]
+		quotedFullName = fmt.Sprintf(`"%s"."%s"`, a[0], a[1])
+	} else if len(a) == 1 {
+		tableName = a[0]
+		quotedFullName = fmt.Sprintf(`"%s"`, a[0])
+	}
+	return quotedFullName, schemaName, tableName, nil
 }

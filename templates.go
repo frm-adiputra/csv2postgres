@@ -16,8 +16,6 @@ func init() {
 	tmpl.Funcs(map[string]interface{}{
 		"lowerCaseFirst": lowerCaseFirst,
 		"upperCaseFirst": upperCaseFirst,
-		"tableName":      tableName,
-		"schemaName":     schemaName,
 	})
 	addTemplate(tmpl, "runner.go", "/runner.go.tmpl")
 	addTemplate(tmpl, "csvReader.go", "/csvReader.go.tmpl")

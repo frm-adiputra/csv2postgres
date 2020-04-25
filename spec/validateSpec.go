@@ -69,7 +69,9 @@ func (s *Spec) validate() error {
 		return err
 	}
 
-	validateTable(s.Table)
+	if s.Table == "" {
+		return errors.New("table name required")
+	}
 
 	return nil
 }
@@ -153,24 +155,4 @@ func validateComputedField(f *ComputedField) error {
 	}
 
 	return nil
-}
-
-func validateTable(t *Table) {
-	// Quote table name and schema name
-	t.Name = quoteTableName(t.Name)
-
-	// Quote table name and schema name in dependsOn
-	l := make([]string, len(t.DependsOn))
-	for i, d := range t.DependsOn {
-		l[i] = quoteTableName(d)
-	}
-	t.DependsOn = l
-}
-
-func quoteTableName(s string) string {
-	l := strings.Split(s, ".")
-	for i, e := range l {
-		l[i] = fmt.Sprintf(`"%s"`, e)
-	}
-	return strings.Join(l, ".")
 }
