@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"fmt"
+	"io"
 )
 
 // RecordReader is a type that specify record reader.
@@ -35,7 +36,9 @@ func (r *RecordReader) Close() error {
 // ReadRecord reads a single record.
 func (r *RecordReader) ReadRecord() (map[string]interface{}, error) {
 	row, err := r.RowReader.ReadRow()
-	if err != nil {
+	if err == io.EOF {
+		return nil, err
+	} else if err != nil {
 		return nil, fmt.Errorf("%s record #%d: %w",
 			r.Name, r.RowReader.RowCount(), err)
 	}

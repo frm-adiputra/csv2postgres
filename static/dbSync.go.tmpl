@@ -103,16 +103,16 @@ func (d DBSynchronizer) Drop(db *sql.DB) error {
 // Fill rows
 func (d DBSynchronizer) Fill(db *sql.DB) error {
     err := d.recordReader.Open()
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
+	}
 
-    defer d.recordReader.Close()
+	defer d.recordReader.Close()
 
-    txn, err := db.Begin()
-    if err != nil {
-        return err
-    }
+	txn, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
+	}
 
     stmt, err := txn.Prepare(pq.{{if .Table.SchemaName}}CopyInSchema{{else}}CopyIn{{end}}(
         {{- if .Table.SchemaName}}
@@ -132,10 +132,10 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
     ))
     if err != nil {
         if rollbackErr := txn.Rollback(); rollbackErr != nil {
-			return fmt.Errorf("failed to rollback: %s: %w",
-                rollbackErr.Error(), err)
+			return fmt.Errorf("%s: %w", d.recordReader.Name,
+				fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
 		}
-        return err
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
     }
 
     for {
@@ -146,10 +146,12 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
 		if err != nil {
             stmt.Exec()
 			if rollbackErr := txn.Rollback(); rollbackErr != nil {
-                return fmt.Errorf("failed to rollback: %s: %w",
-                    rollbackErr.Error(), err)
-            }
-            return err
+				return fmt.Errorf("%s record #%d: %w", d.recordReader.Name,
+					d.recordReader.RowReader.RowCount(),
+					fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
+			}
+			return fmt.Errorf("%s record #%d: %w",
+				d.recordReader.Name, d.recordReader.RowReader.RowCount(), err)
 		}
         _, err = stmt.Exec(
             {{- range .Fields}}
@@ -165,39 +167,41 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
         )
         if err != nil {
             stmt.Exec()
-            if rollbackErr := txn.Rollback(); rollbackErr != nil {
-                return fmt.Errorf("failed to rollback: %s: %w",
-                    rollbackErr.Error(), err)
-            }
-            return err
+			if rollbackErr := txn.Rollback(); rollbackErr != nil {
+				return fmt.Errorf("%s record #%d: %w", d.recordReader.Name,
+					d.recordReader.RowReader.RowCount(),
+					fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
+			}
+			return fmt.Errorf("%s record #%d: %w",
+				d.recordReader.Name, d.recordReader.RowReader.RowCount(), err)
         }
 	}
 
     _, err = stmt.Exec()
     if err != nil {
         if rollbackErr := txn.Rollback(); rollbackErr != nil {
-			return fmt.Errorf("failed to rollback: %s: %w",
-                rollbackErr.Error(), err)
+			return fmt.Errorf("%s: %w", d.recordReader.Name,
+				fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
 		}
-        return err
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
     }
 
     err = stmt.Close()
     if err != nil {
         if rollbackErr := txn.Rollback(); rollbackErr != nil {
-			return fmt.Errorf("failed to rollback: %s: %w",
-                rollbackErr.Error(), err)
+			return fmt.Errorf("%s: %w", d.recordReader.Name,
+				fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
 		}
-        return err
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
     }
 
     err = txn.Commit()
     if err != nil {
         if rollbackErr := txn.Rollback(); rollbackErr != nil {
-			return fmt.Errorf("failed to rollback: %s: %w",
-                rollbackErr.Error(), err)
+			return fmt.Errorf("%s: %w", d.recordReader.Name,
+				fmt.Errorf("failed to rollback: %s: %w", rollbackErr.Error(), err))
 		}
-        return err
+		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
     }
     return nil
 }
