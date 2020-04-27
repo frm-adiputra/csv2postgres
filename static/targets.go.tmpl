@@ -33,7 +33,15 @@ func (t {{upperCaseFirst .Name}}) Drop() error {
         return err
     }
     defer db.Close()
-    return {{.PkgVar}}DB.Drop(db)
+
+    fmt.Print("{{upperCaseFirst .Name}}: Dropping table...")
+    err = {{.PkgVar}}DB.Drop(db)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
 }
 
 // Create creates table {{.Name}}
@@ -43,7 +51,15 @@ func (t {{upperCaseFirst .Name}}) Create() error {
         return err
     }
     defer db.Close()
-    return {{.PkgVar}}DB.Create(db)
+
+    fmt.Print("{{upperCaseFirst .Name}}: Creating table...")
+    err = {{.PkgVar}}DB.Create(db)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
 }
 
 // Delete deletes rows from table {{.Name}}
@@ -53,7 +69,15 @@ func (t {{upperCaseFirst .Name}}) Delete() error {
         return err
     }
     defer db.Close()
-    return {{.PkgVar}}DB.Delete(db)
+
+    fmt.Print("{{upperCaseFirst .Name}}: Deleting table...")
+    err = {{.PkgVar}}DB.Delete(db)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
 }
 
 // Fill fill rows of table {{.Name}}
@@ -63,7 +87,15 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
         return err
     }
     defer db.Close()
-    return {{.PkgVar}}DB.Fill(db)
+
+    fmt.Print("{{upperCaseFirst .Name}}: Filling table...")
+    err = {{.PkgVar}}DB.Fill(db)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
 }
 
 // Up recreates and fill rows of table {{.Name}}
