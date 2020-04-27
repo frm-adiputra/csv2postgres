@@ -1,6 +1,8 @@
 package pipeline
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // RecordReader is a type that specify record reader.
 type RecordReader struct {
@@ -34,22 +36,26 @@ func (r *RecordReader) Close() error {
 func (r *RecordReader) ReadRecord() (map[string]interface{}, error) {
 	row, err := r.RowReader.ReadRow()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s record #%d: %w",
+			r.Name, r.RowReader.RowCount(), err)
 	}
 
 	fields, err := r.FieldProvider.ProvideField(row)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s record #%d: %w",
+			r.Name, r.RowReader.RowCount(), err)
 	}
 
 	fields, err = r.Converter.Convert(fields)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s record #%d: %w",
+			r.Name, r.RowReader.RowCount(), err)
 	}
 
 	fields, err = r.Computer.Compute(fields)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s record #%d: %w",
+			r.Name, r.RowReader.RowCount(), err)
 	}
 
 	err = r.Validator.Validate(fields)
