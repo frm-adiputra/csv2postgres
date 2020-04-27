@@ -64,10 +64,21 @@ type tableTemplateData struct {
 }
 
 func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
-	err := checkDuplicateTableNames(specs)
+	err := checkDuplicateSpecNames(specs)
 	if err != nil {
 		return nil, err
 	}
+
+	err = checkDuplicateTableNames(specs)
+	if err != nil {
+		return nil, err
+	}
+
+	err = linkDependencies(specs)
+	if err != nil {
+		return nil, err
+	}
+
 	csa := make([]specTemplateData, len(specs))
 	errStr := "generating code for '%s': %w"
 	for i, s := range specs {
@@ -125,6 +136,46 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 		Specs:     csa,
 		PkgVar:    strings.ToLower(path.Base(g.BaseImportPath)),
 	}, nil
+}
+
+func checkDuplicateSpecNames(specs []*spec.Spec) error {
+	m := make(map[string]bool)
+	for _, s := range specs {
+		_, found := m[s.Name]
+		if found {
+			return fmt.Errorf("duplicate name '%s' in '%s'",
+				s.Name, s.SpecFile)
+		}
+		m[s.Name] = true
+	}
+	return nil
+}
+
+func linkDependencies(specs []*spec.Spec) error {
+	m := make(map[string][]string)
+
+	// init map
+	for _, s := range specs {
+		m[s.Name] = make([]string, 0)
+	}
+
+	// record dependants
+	for _, s := range specs {
+		for _, d := range s.DependsOn {
+			a, ok := m[d]
+			if !ok {
+				return fmt.Errorf("dependency of '%s' not found: '%s'",
+					s.Name, d)
+			}
+			m[d] = append(a, s.Name)
+		}
+	}
+
+	// set dependants
+	for _, s := range specs {
+		s.Dependants = m[s.Name]
+	}
+	return nil
 }
 
 func checkDuplicateTableNames(specs []*spec.Spec) error {

@@ -24,6 +24,7 @@ func generateDemo() {
 			"specs/requiredField.yaml",
 			"specs/constraints.yaml",
 		},
+		// Views: "specs/views.yaml",
 	}
 	err := g.Generate()
 	if err != nil {

@@ -1,0 +1,6 @@
+views:
+- name: schema.first
+  sql: views/first.sql
+  dependsOn:
+  - constraints
+  - noValidator

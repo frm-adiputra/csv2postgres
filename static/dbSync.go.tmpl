@@ -144,6 +144,7 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
 			break
 		}
 		if err != nil {
+            stmt.Exec()
 			if rollbackErr := txn.Rollback(); rollbackErr != nil {
                 return fmt.Errorf("failed to rollback: %s: %w",
                     rollbackErr.Error(), err)
@@ -163,6 +164,7 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
             {{- end}}
         )
         if err != nil {
+            stmt.Exec()
             if rollbackErr := txn.Rollback(); rollbackErr != nil {
                 return fmt.Errorf("failed to rollback: %s: %w",
                     rollbackErr.Error(), err)
