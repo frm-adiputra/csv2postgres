@@ -9,3 +9,4 @@ Golang code generator for importing CSV to PostgreSQL with fun features
 - [ ] Create additional views
 - [ ] Export from PostgreSQL to CSV
 - [ ] Manage dependencies between tables and views
+- [ ] Use dependency graph from database for rolling back migration, and from code for migrate
