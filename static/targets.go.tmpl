@@ -182,11 +182,5 @@ func AllDown() {
     {{- range .DropDepsAll}}
         {{upperCaseFirst .}}.Drop,
     {{- end}}
-    {{- range .DropDepsAll}}
-        {{upperCaseFirst .}}.Create,
-    {{- end}}
-    {{- range .DropDepsAll}}
-        {{upperCaseFirst .}}.Fill,
-    {{- end}}
     )
 }
