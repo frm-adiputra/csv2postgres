@@ -10,9 +10,11 @@ import (
 )
 
 type templateData struct {
-	Generator string
-	Specs     []specTemplateData
-	PkgVar    string
+	Generator     string
+	Specs         []specTemplateData
+	PkgVar        string
+	CreateDepsAll []string
+	DropDepsAll   []string
 }
 
 type specTemplateData struct {
@@ -37,7 +39,8 @@ type specTemplateData struct {
 	HasValidation     bool
 	Table             *tableTemplateData
 	DependsOn         []string
-	Dependants        []string
+	CreateDeps        []string
+	DropDeps          []string
 	Constraints       []string
 }
 
@@ -75,7 +78,7 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 		return nil, err
 	}
 
-	err = linkDependencies(specs)
+	deps, err := linkDependencies(specs)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +106,9 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 			return nil, fmt.Errorf(errStr, s.SpecFile, err)
 		}
 
+		createDeps, err := deps.CreateOrder(s.Name)
+		dropDeps, err := deps.DropOrder(s.Name)
+
 		requireSQLPkg := requireSQLPkg(fields)
 		requireStrconvPkg := requireStrconvPkg(fields)
 		requireTimePkg := requireTimePkg(fields)
@@ -129,14 +135,17 @@ func newTemplateData(g Generator, specs []*spec.Spec) (*templateData, error) {
 			HasValidation:     hasValidation,
 			Table:             tableData,
 			DependsOn:         s.DependsOn,
-			Dependants:        s.Dependants,
+			CreateDeps:        createDeps,
+			DropDeps:          dropDeps,
 			Constraints:       s.Constraints,
 		}
 	}
 	return &templateData{
-		Generator: "github.com/frm-adiputra/csv2postgres",
-		Specs:     csa,
-		PkgVar:    strings.ToLower(path.Base(g.BaseImportPath)),
+		Generator:     "github.com/frm-adiputra/csv2postgres",
+		Specs:         csa,
+		PkgVar:        strings.ToLower(path.Base(g.BaseImportPath)),
+		CreateDepsAll: deps.CreateOrderAll(),
+		DropDepsAll:   deps.DropOrderAll(),
 	}, nil
 }
 
@@ -153,31 +162,26 @@ func checkDuplicateSpecNames(specs []*spec.Spec) error {
 	return nil
 }
 
-func linkDependencies(specs []*spec.Spec) error {
-	m := make(map[string][]string)
-
-	// init map
-	for _, s := range specs {
-		m[s.Name] = make([]string, 0)
+func linkDependencies(specs []*spec.Spec) (DepsGraph, error) {
+	targets := make([]string, len(specs))
+	for i, s := range specs {
+		targets[i] = s.Name
 	}
 
-	// record dependants
+	d := NewDepsGraph(targets)
+
 	for _, s := range specs {
-		for _, d := range s.DependsOn {
-			a, ok := m[d]
-			if !ok {
-				return fmt.Errorf("dependency of '%s' not found: '%s'",
-					s.Name, d)
-			}
-			m[d] = append(a, s.Name)
+		for _, ds := range s.DependsOn {
+			d.DependsOn(s.Name, ds)
 		}
 	}
 
-	// set dependants
-	for _, s := range specs {
-		s.Dependants = m[s.Name]
+	err := d.Finalize()
+	if err != nil {
+		return DepsGraph{}, err
 	}
-	return nil
+
+	return *d, nil
 }
 
 func checkDuplicateTableNames(specs []*spec.Spec) error {

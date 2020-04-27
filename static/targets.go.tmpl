@@ -47,10 +47,10 @@ func (t {{upperCaseFirst .Name}}) Drop() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depDrop() error {
-    {{- if .Dependants}}
-    mg.Deps(
-        {{- range .Dependants}}
-        {{upperCaseFirst .}}.depDrop,
+    {{- if .DropDeps}}
+    mg.SerialDeps(
+        {{- range .DropDeps}}
+        {{upperCaseFirst .}}.Drop,
         {{- end}}
     )
     {{- end}}
@@ -76,10 +76,10 @@ func (t {{upperCaseFirst .Name}}) Create() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depCreate() error {
-    {{- if .DependsOn}}
-    mg.Deps(
-        {{- range .DependsOn}}
-        {{upperCaseFirst .}}.depCreate,
+    {{- if .CreateDeps}}
+    mg.SerialDeps(
+        {{- range .CreateDeps}}
+        {{upperCaseFirst .}}.Create,
         {{- end}}
     )
     {{- end}}
@@ -105,10 +105,10 @@ func (t {{upperCaseFirst .Name}}) Delete() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depDelete() error {
-    {{- if .Dependants}}
-    mg.Deps(
-        {{- range .Dependants}}
-        {{upperCaseFirst .}}.depDelete,
+    {{- if .DropDeps}}
+    mg.SerialDeps(
+        {{- range .DropDeps}}
+        {{upperCaseFirst .}}.Delete,
         {{- end}}
     )
     {{- end}}
@@ -134,10 +134,10 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depFill() error {
-    {{- if .DependsOn}}
-    mg.Deps(
-        {{- range .DependsOn}}
-        {{upperCaseFirst .}}.depFill,
+    {{- if .CreateDeps}}
+    mg.SerialDeps(
+        {{- range .CreateDeps}}
+        {{upperCaseFirst .}}.Fill,
         {{- end}}
     )
     {{- end}}
@@ -155,7 +155,7 @@ func (t {{upperCaseFirst .Name}}) Up() {
 
 // Down drops the table {{.Name}} and its dependants
 func (t {{upperCaseFirst .Name}}) Down() {
-    mg.Deps(
+    mg.SerialDeps(
         {{upperCaseFirst .Name}}.depDrop,
     )
 }
@@ -163,18 +163,30 @@ func (t {{upperCaseFirst .Name}}) Down() {
 
 // AllUp recreates and fill rows of all tables
 func AllUp() {
-    mg.Deps(
-    {{- range .Specs}}
-        {{upperCaseFirst .Name}}.Up,
+    mg.SerialDeps(
+    {{- range .CreateDepsAll}}
+        {{upperCaseFirst .}}.Drop,
+    {{- end}}
+    {{- range .CreateDepsAll}}
+        {{upperCaseFirst .}}.Create,
+    {{- end}}
+    {{- range .CreateDepsAll}}
+        {{upperCaseFirst .}}.Fill,
     {{- end}}
     )
 }
 
 // AllDown drops all tables and its dependants
 func AllDown() {
-    mg.Deps(
-    {{- range .Specs}}
-        {{upperCaseFirst .Name}}.Down,
+    mg.SerialDeps(
+    {{- range .DropDepsAll}}
+        {{upperCaseFirst .}}.Drop,
+    {{- end}}
+    {{- range .DropDepsAll}}
+        {{upperCaseFirst .}}.Create,
+    {{- end}}
+    {{- range .DropDepsAll}}
+        {{upperCaseFirst .}}.Fill,
     {{- end}}
     )
 }

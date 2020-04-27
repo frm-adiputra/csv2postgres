@@ -7,7 +7,7 @@ import (
 	"github.com/yourbasic/graph"
 )
 
-type DepsGraph struct {
+type DepsGraphTest struct {
 	N        int
 	g        *graph.Mutable
 	g1       *graph.Mutable // Transpose of g
@@ -15,8 +15,8 @@ type DepsGraph struct {
 	topSort1 []int
 }
 
-func NewDeps(n int) *DepsGraph {
-	return &DepsGraph{
+func NewDeps(n int) *DepsGraphTest {
+	return &DepsGraphTest{
 		N:  n,
 		g:  graph.New(n),
 		g1: graph.New(n),
@@ -24,7 +24,7 @@ func NewDeps(n int) *DepsGraph {
 }
 
 // DependsOn creates new dependency: a depends to b
-func (d *DepsGraph) DependsOn(a, b int) error {
+func (d *DepsGraphTest) DependsOn(a, b int) error {
 	if a < 1 || b < 1 || a > d.N || b > d.N {
 		return errors.New("invalid a or b value")
 	}
@@ -33,34 +33,7 @@ func (d *DepsGraph) DependsOn(a, b int) error {
 	return nil
 }
 
-func (d *DepsGraph) Finalize() error {
-	// if !graph.Acyclic(d.g) {
-	// 	return errors.New("must be acyclic dependencies")
-	// }
-	// ends := make([]int, 0)
-	// for i := 1; i < d.End; i++ {
-	// 	if d.g.Degree(i) == 0 {
-	// 		ends = append(ends, i)
-	// 	}
-	// }
-
-	// starts := make([]int, 0)
-	// for i := 1; i < d.End; i++ {
-	// 	if d.g1.Degree(i) == 0 {
-	// 		starts = append(starts, i)
-	// 	}
-	// }
-
-	// for _, i := range ends {
-	// 	d.g.AddCost(i, d.End, 1)
-	// 	d.g1.AddCost(d.Start, i, 1)
-	// }
-
-	// for _, i := range starts {
-	// 	d.g.AddCost(d.Start, i, 1)
-	// 	d.g1.AddCost(i, d.End, 1)
-	// }
-
+func (d *DepsGraphTest) Finalize() error {
 	ts, ok := graph.TopSort(d.g)
 	if !ok {
 		return errors.New("must be acyclic dependencies")
@@ -77,7 +50,7 @@ func (d *DepsGraph) Finalize() error {
 	return nil
 }
 
-func (d *DepsGraph) CreateRoute(v int) (path []int) {
+func (d *DepsGraphTest) CreateRoute(v int) (path []int) {
 	m := make(map[int]bool)
 	m[v] = true
 	graph.BFS(d.g, v, func(v, w int, c int64) {
@@ -91,10 +64,10 @@ func (d *DepsGraph) CreateRoute(v int) (path []int) {
 			result = append(result, i)
 		}
 	}
-	return reverse(result)
+	return reverseArr(result)
 }
 
-func (d *DepsGraph) DropRoute(v int) (path []int) {
+func (d *DepsGraphTest) DropRoute(v int) (path []int) {
 	m := make(map[int]bool)
 	m[v] = true
 	graph.BFS(d.g1, v, func(v, w int, c int64) {
@@ -108,10 +81,10 @@ func (d *DepsGraph) DropRoute(v int) (path []int) {
 			result = append(result, i)
 		}
 	}
-	return reverse(result)
+	return reverseArr(result)
 }
 
-func reverse(numbers []int) []int {
+func reverseArr(numbers []int) []int {
 	for i := 0; i < len(numbers)/2; i++ {
 		j := len(numbers) - i - 1
 		numbers[i], numbers[j] = numbers[j], numbers[i]
