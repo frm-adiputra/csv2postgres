@@ -60,4 +60,7 @@ type DBSynchronizer interface {
 
 	// Fill rows
 	Fill(*sql.DB) error
+
+	// RowCount returns number of rows that is filled.
+	RowCount() int64
 }

@@ -96,7 +96,7 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
         fmt.Println("[FAILED]")
         return err
     }
-    fmt.Println("[OK]")
+    fmt.Printf(" %d records [OK]\n", {{.PkgVar}}DB.RowCount())
     return nil
 }
 

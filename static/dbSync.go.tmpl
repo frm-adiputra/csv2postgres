@@ -77,6 +77,11 @@ func (d DBSynchronizer) Name() string {
     return d.name
 }
 
+// RowCount returns number of rows that is filled.
+func (d DBSynchronizer) RowCount() int64 {
+    return d.recordReader.RowCount()
+}
+
 // DependsOn returns other tables that this table depends on
 func (d DBSynchronizer) DependsOn() []string {
     return d.dependsOn
