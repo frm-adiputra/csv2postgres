@@ -46,6 +46,17 @@ func (t {{upperCaseFirst .Name}}) Drop() error {
     return nil
 }
 
+func (t {{upperCaseFirst .Name}}) depDrop() error {
+    {{- if .Dependants}}
+    mg.Deps(
+        {{- range .Dependants}}
+        {{upperCaseFirst .}}.depDrop,
+        {{- end}}
+    )
+    {{- end}}
+    return t.Drop()
+}
+
 // Create creates table {{.Name}}
 func (t {{upperCaseFirst .Name}}) Create() error {
     db, err := newDBConn()
@@ -62,6 +73,17 @@ func (t {{upperCaseFirst .Name}}) Create() error {
     }
     fmt.Println("[OK]")
     return nil
+}
+
+func (t {{upperCaseFirst .Name}}) depCreate() error {
+    {{- if .DependsOn}}
+    mg.Deps(
+        {{- range .DependsOn}}
+        {{upperCaseFirst .}}.depCreate,
+        {{- end}}
+    )
+    {{- end}}
+    return t.Create()
 }
 
 // Delete deletes rows from table {{.Name}}
@@ -82,6 +104,17 @@ func (t {{upperCaseFirst .Name}}) Delete() error {
     return nil
 }
 
+func (t {{upperCaseFirst .Name}}) depDelete() error {
+    {{- if .Dependants}}
+    mg.Deps(
+        {{- range .Dependants}}
+        {{upperCaseFirst .}}.depDelete,
+        {{- end}}
+    )
+    {{- end}}
+    return t.Delete()
+}
+
 // Fill fill rows of table {{.Name}}
 func (t {{upperCaseFirst .Name}}) Fill() error {
     db, err := newDBConn()
@@ -100,13 +133,48 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
     return nil
 }
 
-// Up recreates and fill rows of table {{.Name}}
-func (t {{upperCaseFirst .Name}}) Up() error {
-    mg.SerialDeps(
-        {{upperCaseFirst .Name}}.Drop,
-        {{upperCaseFirst .Name}}.Create,
-        {{upperCaseFirst .Name}}.Fill,
+func (t {{upperCaseFirst .Name}}) depFill() error {
+    {{- if .DependsOn}}
+    mg.Deps(
+        {{- range .DependsOn}}
+        {{upperCaseFirst .}}.depFill,
+        {{- end}}
     )
-    return nil
+    {{- end}}
+    return t.Fill()
 }
-{{end -}}
+
+// Up recreates and fill rows of table {{.Name}}
+func (t {{upperCaseFirst .Name}}) Up() {
+    mg.SerialDeps(
+        {{upperCaseFirst .Name}}.depDrop,
+        {{upperCaseFirst .Name}}.depCreate,
+        {{upperCaseFirst .Name}}.depFill,
+    )
+}
+
+// Down drops the table {{.Name}} and its dependants
+func (t {{upperCaseFirst .Name}}) Down() {
+    mg.Deps(
+        {{upperCaseFirst .Name}}.depDrop,
+    )
+}
+{{- end}}
+
+// AllUp recreates and fill rows of all tables
+func AllUp() {
+    mg.Deps(
+    {{- range .Specs}}
+        {{upperCaseFirst .Name}}.Up,
+    {{- end}}
+    )
+}
+
+// AllDown drops all tables and its dependants
+func AllDown() {
+    mg.Deps(
+    {{- range .Specs}}
+        {{upperCaseFirst .Name}}.Down,
+    {{- end}}
+    )
+}

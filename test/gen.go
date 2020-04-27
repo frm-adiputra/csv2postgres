@@ -23,6 +23,7 @@ func generateDemo() {
 			"specs/noValidator.yaml",
 			"specs/requiredField.yaml",
 			"specs/constraints.yaml",
+			"specs/dependsOn.yaml",
 		},
 		// Views: "specs/views.yaml",
 	}

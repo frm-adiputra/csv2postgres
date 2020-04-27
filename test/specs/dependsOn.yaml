@@ -1,0 +1,11 @@
+source: dependsOn.csv
+separator: ","
+fields:
+  - name: a
+    type: varchar(3)
+  - name: b
+    type: text
+table: dependsOn
+dependsOn:
+  - constraints
+  - noValidator
