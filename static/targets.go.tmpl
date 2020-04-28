@@ -233,28 +233,34 @@ func (t {{toExportedName .Name}}) depCreate() {
 
 // Export exports view's query result to CSV.
 func (t {{toExportedName .Name}}) Export() error {
+    fmt.Print("{{toExportedName .Name}}: Exporting to CSV...")
     dir := filepath.Dir(`{{.Export}}`)
     err := os.MkdirAll(dir, 0777)
 	if err != nil {
+        fmt.Println("[FAILED]")
 		return fmt.Errorf("{{.Name}} export to CSV: %w", err)
 	}
 
     db, err := newDBConn()
     if err != nil {
+        fmt.Println("[FAILED]")
         return err
     }
     defer db.Close()
 
     rows, err := db.Query(`SELECT * FROM "{{.Schema}}"."{{toSnake .Name}}"`)
     if err != nil {
+        fmt.Println("[FAILED]")
         return fmt.Errorf("{{.Name}} export to CSV: %w", err)
     }
     defer rows.Close()
 
     err = sqltocsv.WriteFile("{{.Export}}", rows)
     if err != nil {
+        fmt.Println("[FAILED]")
         return fmt.Errorf("{{.Name}} export to CSV: %w", err)
     }
+    fmt.Println("[OK]")
     return nil
 }
 {{- end}}
