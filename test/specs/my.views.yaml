@@ -1,6 +1,7 @@
 views:
 - schema: first
   file: views/myVwFirst.sql
+  export: out/myVwFirst.csv
   dependsOn:
     - constraints
     - noValidator

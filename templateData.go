@@ -10,13 +10,14 @@ import (
 )
 
 type templateData struct {
-	Generator     string
-	Specs         []specTemplateData
-	PkgVar        string
-	CreateDepsAll []dependencyData
-	DropDepsAll   []dependencyData
-	Views         []viewTemplateData
-	ImportPath    string
+	Generator      string
+	Specs          []specTemplateData
+	PkgVar         string
+	CreateDepsAll  []dependencyData
+	DropDepsAll    []dependencyData
+	Views          []viewTemplateData
+	ImportPath     string
+	ViewsHasExport bool
 }
 
 type specTemplateData struct {
@@ -76,8 +77,9 @@ type viewTemplateData struct {
 }
 
 type dependencyData struct {
-	Name  string
-	Table bool
+	Name   string
+	Table  bool
+	Export bool
 }
 
 func newTemplateData(g Generator, specs []*spec.Spec, vs *spec.Views) (*templateData, error) {
@@ -91,10 +93,12 @@ func newTemplateData(g Generator, specs []*spec.Spec, vs *spec.Views) (*template
 		return nil, err
 	}
 
-	deps, targetIsTable, err := linkDependencies(specs, vs)
+	deps, targetIsTable, targetHasExport, err := linkDependencies(specs, vs)
 	if err != nil {
 		return nil, err
 	}
+
+	hasExport := len(targetHasExport) != 0
 
 	csa := make([]specTemplateData, len(specs))
 	errStr := "generating code for '%s': %w"
@@ -123,13 +127,13 @@ func newTemplateData(g Generator, specs []*spec.Spec, vs *spec.Views) (*template
 		if err != nil {
 			return nil, fmt.Errorf(errStr, s.SpecFile, err)
 		}
-		createDeps := createDependenciesData(cDeps, targetIsTable)
+		createDeps := createDependenciesData(cDeps, targetIsTable, targetHasExport)
 
 		dDeps, err := deps.DropOrder(s.Name)
 		if err != nil {
 			return nil, fmt.Errorf(errStr, s.SpecFile, err)
 		}
-		dropDeps := createDependenciesData(dDeps, targetIsTable)
+		dropDeps := createDependenciesData(dDeps, targetIsTable, targetHasExport)
 
 		requireSQLPkg := requireSQLPkg(fields)
 		requireStrconvPkg := requireStrconvPkg(fields)
@@ -163,29 +167,32 @@ func newTemplateData(g Generator, specs []*spec.Spec, vs *spec.Views) (*template
 		}
 	}
 
-	vsd, err := createViewsTemplateData(vs, deps, targetIsTable)
+	vsd, err := createViewsTemplateData(vs, deps, targetIsTable, targetHasExport)
 	if err != nil {
 		return nil, fmt.Errorf(errStr, vs.SpecFile, err)
 	}
 
 	return &templateData{
-		Generator:     "github.com/frm-adiputra/csv2postgres",
-		Specs:         csa,
-		PkgVar:        strings.ToLower(path.Base(g.BaseImportPath)),
-		CreateDepsAll: createDependenciesData(deps.CreateOrderAll(), targetIsTable),
-		DropDepsAll:   createDependenciesData(deps.DropOrderAll(), targetIsTable),
-		Views:         vsd,
-		ImportPath:    g.BaseImportPath,
+		Generator:      "github.com/frm-adiputra/csv2postgres",
+		Specs:          csa,
+		PkgVar:         strings.ToLower(path.Base(g.BaseImportPath)),
+		CreateDepsAll:  createDependenciesData(deps.CreateOrderAll(), targetIsTable, targetHasExport),
+		DropDepsAll:    createDependenciesData(deps.DropOrderAll(), targetIsTable, targetHasExport),
+		Views:          vsd,
+		ViewsHasExport: hasExport,
+		ImportPath:     g.BaseImportPath,
 	}, nil
 }
 
-func createDependenciesData(deps []string, targetIsTable map[string]bool) []dependencyData {
+func createDependenciesData(deps []string, targetIsTable, targetHasExport map[string]bool) []dependencyData {
 	l := make([]dependencyData, len(deps))
 	for i, v := range deps {
 		_, isTable := targetIsTable[v]
+		_, isExport := targetHasExport[v]
 		l[i] = dependencyData{
-			Name:  v,
-			Table: isTable,
+			Name:   v,
+			Table:  isTable,
+			Export: isExport,
 		}
 	}
 	return l
@@ -212,15 +219,19 @@ func checkDuplicateNames(specs []*spec.Spec, vs *spec.Views) error {
 	return nil
 }
 
-func linkDependencies(specs []*spec.Spec, vs *spec.Views) (DepsGraph, map[string]bool, error) {
+func linkDependencies(specs []*spec.Spec, vs *spec.Views) (DepsGraph, map[string]bool, map[string]bool, error) {
 	targets := make([]string, 0, len(specs)+len(vs.Views))
 	targetIsTable := make(map[string]bool)
+	targetHasExport := make(map[string]bool)
 	for _, s := range specs {
 		targets = append(targets, s.Name)
 		targetIsTable[s.Name] = true
 	}
 	for _, v := range vs.Views {
 		targets = append(targets, v.Name)
+		if v.Export != "" {
+			targetHasExport[v.Name] = true
+		}
 	}
 
 	d := NewDepsGraph(targets)
@@ -229,7 +240,7 @@ func linkDependencies(specs []*spec.Spec, vs *spec.Views) (DepsGraph, map[string
 		for _, ds := range s.DependsOn {
 			err := d.DependsOn(s.Name, ds)
 			if err != nil {
-				return DepsGraph{}, nil, err
+				return DepsGraph{}, nil, nil, err
 			}
 		}
 	}
@@ -238,17 +249,17 @@ func linkDependencies(specs []*spec.Spec, vs *spec.Views) (DepsGraph, map[string
 		for _, ds := range s.DependsOn {
 			err := d.DependsOn(s.Name, ds)
 			if err != nil {
-				return DepsGraph{}, nil, err
+				return DepsGraph{}, nil, nil, err
 			}
 		}
 	}
 
 	err := d.Finalize()
 	if err != nil {
-		return DepsGraph{}, nil, err
+		return DepsGraph{}, nil, nil, err
 	}
 
-	return *d, targetIsTable, nil
+	return *d, targetIsTable, targetHasExport, nil
 }
 
 func checkDuplicateTableNames(specs []*spec.Spec) error {
@@ -482,19 +493,19 @@ func parseTableName(s string) (quotedFullName, schemaName, tableName string, err
 	return quotedFullName, schemaName, tableName, nil
 }
 
-func createViewsTemplateData(vs *spec.Views, deps DepsGraph, targetIsTable map[string]bool) ([]viewTemplateData, error) {
+func createViewsTemplateData(vs *spec.Views, deps DepsGraph, targetIsTable, targetHasExport map[string]bool) ([]viewTemplateData, error) {
 	l := make([]viewTemplateData, 0, len(vs.Views))
 	for _, v := range vs.Views {
 		cDeps, err := deps.CreateOrder(v.Name)
 		if err != nil {
 			return nil, err
 		}
-		createDeps := createDependenciesData(cDeps, targetIsTable)
+		createDeps := createDependenciesData(cDeps, targetIsTable, targetHasExport)
 		dDeps, err := deps.DropOrder(v.Name)
 		if err != nil {
 			return nil, err
 		}
-		dropDeps := createDependenciesData(dDeps, targetIsTable)
+		dropDeps := createDependenciesData(dDeps, targetIsTable, targetHasExport)
 		l = append(l, viewTemplateData{
 			View:       v,
 			CreateDeps: createDeps,

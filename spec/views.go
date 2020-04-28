@@ -26,6 +26,9 @@ type View struct {
 	// rules. The view name will be generated based on file name and converted
 	// to snake case.
 	File string
+
+	// If set, the result of view will be exported to CSV file defined.
+	Export string
 }
 
 // NewViews creates a new views spec from a YAML file.

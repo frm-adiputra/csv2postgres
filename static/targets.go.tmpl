@@ -6,8 +6,15 @@ package main
 
 import (
     "fmt"
+    {{- if .ViewsHasExport}}
+    "os"
+    "path/filepath"
+    {{- end}}
 
     "github.com/magefile/mage/mg"
+    {{- if .ViewsHasExport}}
+    "github.com/joho/sqltocsv"
+    {{- end}}
     {{- range .Specs}}
     "{{.ImportPath}}"
     {{- end}}
@@ -222,6 +229,35 @@ func (t {{toExportedName .Name}}) depCreate() {
     {{- end}}
 }
 
+{{- if .Export}}
+
+// Export exports view's query result to CSV.
+func (t {{toExportedName .Name}}) Export() error {
+    dir := filepath.Dir(`{{.Export}}`)
+    err := os.MkdirAll(dir, 0777)
+	if err != nil {
+		return fmt.Errorf("{{.Name}} export to CSV: %w", err)
+	}
+
+    db, err := newDBConn()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    rows, err := db.Query(`SELECT * FROM "{{.Schema}}"."{{toSnake .Name}}"`)
+    if err != nil {
+        return fmt.Errorf("{{.Name}} export to CSV: %w", err)
+    }
+    defer rows.Close()
+
+    err = sqltocsv.WriteFile("{{.Export}}", rows)
+    if err != nil {
+        return fmt.Errorf("{{.Name}} export to CSV: %w", err)
+    }
+    return nil
+}
+{{- end}}
 {{- end}}
 
 // AllUp recreates and fill rows of all tables
@@ -236,6 +272,11 @@ func AllUp() {
     {{- range .CreateDepsAll}}
         {{- if .Table}}
         {{upperCaseFirst .Name}}.Fill,
+        {{- end}}
+    {{- end}}
+    {{- range .CreateDepsAll}}
+        {{- if .Export}}
+        {{upperCaseFirst .Name}}.Export,
         {{- end}}
     {{- end}}
     )
