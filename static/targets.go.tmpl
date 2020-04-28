@@ -227,7 +227,7 @@ func (t {{toExportedName .Name}}) depCreate() {
 // AllUp recreates and fill rows of all tables
 func AllUp() {
     mg.SerialDeps(
-    {{- range .CreateDepsAll}}
+    {{- range .DropDepsAll}}
         {{upperCaseFirst .Name}}.Drop,
     {{- end}}
     {{- range .CreateDepsAll}}
