@@ -50,7 +50,7 @@ func newDependencies(n int) *dependencies {
 
 // DependsOn creates new dependency: a depends to b
 func (d *dependencies) dependsOn(a, b int) error {
-	if a < 1 || b < 1 || a > d.N || b > d.N {
+	if a < 0 || b < 0 || a >= d.N || b >= d.N {
 		return errors.New("invalid a or b value")
 	}
 	d.g.AddCost(a, b, 1)
@@ -156,7 +156,10 @@ func (d *DepsGraph) DependsOn(a, b string) error {
 		return fmt.Errorf("unknown target: %s", b)
 	}
 
-	d.deps.dependsOn(aIdx, bIdx)
+	err := d.deps.dependsOn(aIdx, bIdx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
