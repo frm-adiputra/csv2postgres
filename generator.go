@@ -12,6 +12,7 @@ type Generator struct {
 	BaseImportPath string
 	OutDir         string
 	Specs          []string
+	Views          string
 }
 
 // Generate generates source codes based on spec
@@ -21,7 +22,12 @@ func (g Generator) Generate() error {
 		return err
 	}
 
-	td, err := newTemplateData(g, specs)
+	views, err := g.createViews()
+	if err != nil {
+		return err
+	}
+
+	td, err := newTemplateData(g, specs, views)
 	if err != nil {
 		return err
 	}
@@ -32,6 +38,11 @@ func (g Generator) Generate() error {
 	}
 
 	err = g.generateBasedOnSpec(td.Specs)
+	if err != nil {
+		return err
+	}
+
+	err = g.generateViews(td.Views)
 	if err != nil {
 		return err
 	}
@@ -53,6 +64,14 @@ func (g Generator) createSpecs() ([]*spec.Spec, error) {
 		specs[i] = s
 	}
 	return specs, nil
+}
+
+func (g Generator) createViews() (*spec.Views, error) {
+	vs, err := spec.NewViews(g.Views)
+	if err != nil {
+		return nil, err
+	}
+	return vs, nil
 }
 
 func (g Generator) generateCommons(td *templateData) error {
@@ -93,15 +112,23 @@ func (g Generator) generateBasedOnSpec(specsTD []specTemplateData) error {
 				return err
 			}
 		}
+	}
+	return nil
+}
 
-		// err = execTemplate(
-		// 	filepath.Join(
-		// 		std.RootPkgDir,
-		// 		generatedFilename(lowerCaseFirst(std.Name)+"Targets.go")),
-		// 	"targets.go", std)
-		// if err != nil {
-		// 	return err
-		// }
+func (g Generator) generateViews(vs []viewTemplateData) error {
+	// create directory for package
+	pkgDir := filepath.Join(g.OutDir, "internal", "viewsql")
+	err := os.MkdirAll(pkgDir, 0777)
+	if err != nil {
+		return err
+	}
+
+	err = execTemplate(
+		filepath.Join(pkgDir, generatedFilename("view.go")),
+		"view.go", vs)
+	if err != nil {
+		return err
 	}
 	return nil
 }

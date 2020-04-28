@@ -1,0 +1,9 @@
+package viewsql
+{{range .}}
+var {{toExportedName .Name}}Create = `
+CREATE VIEW "{{.Schema}}"."{{toSnake .Name}}" AS
+{{readFile .File -}}
+`
+
+var {{toExportedName .Name}}Drop = `DROP VIEW IF EXISTS "{{.Schema}}"."{{toSnake .Name}}"`
+{{end}}

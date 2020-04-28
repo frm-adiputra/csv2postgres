@@ -11,6 +11,9 @@ import (
     {{- range .Specs}}
     "{{.ImportPath}}"
     {{- end}}
+    {{- if .Views}}
+    "{{$.ImportPath}}/internal/viewsql"
+    {{- end}}
 )
 
 var (
@@ -46,15 +49,14 @@ func (t {{upperCaseFirst .Name}}) Drop() error {
     return nil
 }
 
-func (t {{upperCaseFirst .Name}}) depDrop() error {
+func (t {{upperCaseFirst .Name}}) depDrop() {
     {{- if .DropDeps}}
     mg.SerialDeps(
         {{- range .DropDeps}}
-        {{upperCaseFirst .}}.Drop,
+        {{upperCaseFirst .Name}}.Drop,
         {{- end}}
     )
     {{- end}}
-    return t.Drop()
 }
 
 // Create creates table {{.Name}}
@@ -75,15 +77,14 @@ func (t {{upperCaseFirst .Name}}) Create() error {
     return nil
 }
 
-func (t {{upperCaseFirst .Name}}) depCreate() error {
+func (t {{upperCaseFirst .Name}}) depCreate() {
     {{- if .CreateDeps}}
     mg.SerialDeps(
         {{- range .CreateDeps}}
-        {{upperCaseFirst .}}.Create,
+        {{upperCaseFirst .Name}}.Create,
         {{- end}}
     )
     {{- end}}
-    return t.Create()
 }
 
 // Delete deletes rows from table {{.Name}}
@@ -104,15 +105,16 @@ func (t {{upperCaseFirst .Name}}) Delete() error {
     return nil
 }
 
-func (t {{upperCaseFirst .Name}}) depDelete() error {
-    {{- if .DropDeps}}
+func (t {{upperCaseFirst .Name}}) depDelete() {
+    {{- if hasTableDep .DropDeps}}
     mg.SerialDeps(
         {{- range .DropDeps}}
-        {{upperCaseFirst .}}.Delete,
+        {{- if .Table}}
+        {{upperCaseFirst .Name}}.Delete,
+        {{- end}}
         {{- end}}
     )
     {{- end}}
-    return t.Delete()
 }
 
 // Fill fill rows of table {{.Name}}
@@ -133,15 +135,16 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
     return nil
 }
 
-func (t {{upperCaseFirst .Name}}) depFill() error {
-    {{- if .CreateDeps}}
+func (t {{upperCaseFirst .Name}}) depFill() {
+    {{- if hasTableDep .CreateDeps}}
     mg.SerialDeps(
         {{- range .CreateDeps}}
-        {{upperCaseFirst .}}.Fill,
+        {{- if .Table}}
+        {{upperCaseFirst .Name}}.Fill,
+        {{- end}}
         {{- end}}
     )
     {{- end}}
-    return t.Fill()
 }
 
 // Up recreates and fill rows of table {{.Name}}
@@ -160,18 +163,80 @@ func (t {{upperCaseFirst .Name}}) Down() {
     )
 }
 {{- end}}
+{{- range .Views}}
+type {{toExportedName .Name}} mg.Namespace
+
+// Drop drops view {{.Name}}
+func (t {{toExportedName .Name}}) Drop() error {
+    db, err := newDBConn()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    fmt.Print("{{toExportedName .Name}}: Dropping view...")
+    _, err = db.Exec(viewsql.{{toExportedName .Name}}Drop)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
+}
+
+func (t {{toExportedName .Name}}) depDrop() {
+    {{- if .DropDeps}}
+    mg.SerialDeps(
+        {{- range .DropDeps}}
+        {{upperCaseFirst .Name}}.Drop,
+        {{- end}}
+    )
+    {{- end}}
+}
+
+// Create creates view {{.Name}}
+func (t {{toExportedName .Name}}) Create() error {
+    db, err := newDBConn()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    fmt.Print("{{toExportedName .Name}}: Creating view...")
+    _, err = db.Exec(viewsql.{{toExportedName .Name}}Create)
+    if err != nil {
+        fmt.Println("[FAILED]")
+        return err
+    }
+    fmt.Println("[OK]")
+    return nil
+}
+
+func (t {{toExportedName .Name}}) depCreate() {
+    {{- if .CreateDeps}}
+    mg.SerialDeps(
+        {{- range .CreateDeps}}
+        {{upperCaseFirst .Name}}.Create,
+        {{- end}}
+    )
+    {{- end}}
+}
+
+{{- end}}
 
 // AllUp recreates and fill rows of all tables
 func AllUp() {
     mg.SerialDeps(
     {{- range .CreateDepsAll}}
-        {{upperCaseFirst .}}.Drop,
+        {{upperCaseFirst .Name}}.Drop,
     {{- end}}
     {{- range .CreateDepsAll}}
-        {{upperCaseFirst .}}.Create,
+        {{upperCaseFirst .Name}}.Create,
     {{- end}}
     {{- range .CreateDepsAll}}
-        {{upperCaseFirst .}}.Fill,
+        {{- if .Table}}
+        {{upperCaseFirst .Name}}.Fill,
+        {{- end}}
     {{- end}}
     )
 }
@@ -180,7 +245,7 @@ func AllUp() {
 func AllDown() {
     mg.SerialDeps(
     {{- range .DropDepsAll}}
-        {{upperCaseFirst .}}.Drop,
+        {{upperCaseFirst .Name}}.Drop,
     {{- end}}
     )
 }

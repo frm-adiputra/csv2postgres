@@ -5,6 +5,7 @@ import (
 	"text/template"
 
 	"github.com/frm-adiputra/csv2postgres/internal/box"
+	"github.com/iancoleman/strcase"
 )
 
 var (
@@ -16,6 +17,11 @@ func init() {
 	tmpl.Funcs(map[string]interface{}{
 		"lowerCaseFirst": lowerCaseFirst,
 		"upperCaseFirst": upperCaseFirst,
+		"toPackageName":  toPackageName,
+		"toExportedName": toExportedName,
+		"readFile":       readFile,
+		"toSnake":        strcase.ToSnake,
+		"hasTableDep":    hasTableDep,
 	})
 	addTemplate(tmpl, "runner.go", "/runner.go.tmpl")
 	addTemplate(tmpl, "csvReader.go", "/csvReader.go.tmpl")
@@ -25,6 +31,7 @@ func init() {
 	addTemplate(tmpl, "validator.go", "/validator.go.tmpl")
 	addTemplate(tmpl, "dbSync.go", "/dbSync.go.tmpl")
 	addTemplate(tmpl, "targets.go", "/targets.go.tmpl")
+	addTemplate(tmpl, "view.go", "/view.go.tmpl")
 }
 
 func addTemplate(t *template.Template, name, path string) {

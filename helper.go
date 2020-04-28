@@ -2,7 +2,11 @@ package csv2postgres
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
 	"unicode"
+
+	"github.com/iancoleman/strcase"
 )
 
 func lowerCaseFirst(s string) string {
@@ -21,4 +25,29 @@ func upperCaseFirst(s string) string {
 
 func generatedFilename(s string) string {
 	return fmt.Sprintf("g_%s", s)
+}
+
+func toPackageName(s string) string {
+	return strings.ToLower(strcase.ToCamel(s))
+}
+
+func toExportedName(s string) string {
+	return strcase.ToCamel(s)
+}
+
+func readFile(p string) (string, error) {
+	b, err := ioutil.ReadFile(p)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+func hasTableDep(l []dependencyData) bool {
+	for _, v := range l {
+		if v.Table {
+			return true
+		}
+	}
+	return false
 }

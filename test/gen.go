@@ -25,7 +25,7 @@ func generateDemo() {
 			"specs/constraints.yaml",
 			"specs/dependsOn.yaml",
 		},
-		// Views: "specs/views.yaml",
+		Views: "specs/my.views.yaml",
 	}
 	err := g.Generate()
 	if err != nil {

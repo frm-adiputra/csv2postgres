@@ -1,0 +1,6 @@
+views:
+- schema: first
+  file: views/myVwFirst.sql
+  dependsOn:
+    - constraints
+    - noValidator
