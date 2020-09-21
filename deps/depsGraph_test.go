@@ -1,4 +1,4 @@
-package csv2postgres
+package deps
 
 import (
 	"testing"
