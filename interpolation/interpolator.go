@@ -79,6 +79,9 @@ func (ip *Interpolator) linkDependencies() error {
 		if err != nil {
 			return err
 		}
+
+		t.CreateDepsIncludeTable = hasTableDep(t.CreateDeps)
+		t.DropDepsIncludeTable = hasTableDep(t.DropDeps)
 	}
 
 	for _, v := range ip.viewsData {
@@ -92,4 +95,13 @@ func (ip *Interpolator) linkDependencies() error {
 		}
 	}
 	return nil
+}
+
+func hasTableDep(l []dependencyData) bool {
+	for _, v := range l {
+		if v.Table {
+			return true
+		}
+	}
+	return false
 }

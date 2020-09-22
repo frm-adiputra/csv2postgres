@@ -33,9 +33,11 @@ type TableData struct {
 	HasValidation     bool
 	HasComputed       bool
 
-	DependsOn  []string
-	CreateDeps []dependencyData
-	DropDeps   []dependencyData
+	DependsOn              []string
+	CreateDeps             []dependencyData
+	DropDeps               []dependencyData
+	CreateDepsIncludeTable bool
+	DropDepsIncludeTable   bool
 }
 
 // FieldData represents interpolation result for table's field

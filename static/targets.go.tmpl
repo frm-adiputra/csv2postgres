@@ -113,7 +113,7 @@ func (t {{upperCaseFirst .Name}}) Delete() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depDelete() {
-    {{- if hasTableDep .DropDeps}}
+    {{- if .DropDepsIncludeTable}}
     mg.SerialDeps(
         {{- range .DropDeps}}
         {{- if .Table}}
@@ -143,7 +143,7 @@ func (t {{upperCaseFirst .Name}}) Fill() error {
 }
 
 func (t {{upperCaseFirst .Name}}) depFill() {
-    {{- if hasTableDep .CreateDeps}}
+    {{- if .CreateDepsIncludeTable}}
     mg.SerialDeps(
         {{- range .CreateDeps}}
         {{- if .Table}}
