@@ -15,18 +15,23 @@ type Names struct {
 }
 
 // NewNames create names based on filename
-func NewNames(filename string) (*Names, error) {
+func NewNames(filename, defaultSchema string) (*Names, error) {
 	baseName := filepath.Base(filename)
 	n := strings.Split(baseName, ".")
 
-	if len(n) != 3 {
+	var schemaName, name string
+
+	if len(n) == 2 {
+		schemaName = defaultSchema
+		name = n[0]
+	} else if len(n) == 3 {
+		schemaName = n[0]
+		name = n[1]
+	} else {
 		return nil, fmt.Errorf(
-			"%s: Table/views file spec must be in format 'schema_name.table_or_view_name.yaml'",
+			"%s: Table/views file spec must be in format 'schema_name.table_or_view_name.yaml' or 'table_or_view_name.yaml'",
 			filename)
 	}
-
-	schemaName := n[0]
-	name := n[1]
 
 	return &Names{
 		SchemaName:  schemaName,

@@ -1,3 +1,4 @@
+export: out/myVwFirst.csv
 dependsOn:
   - constraints
   - noValidator

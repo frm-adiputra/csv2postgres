@@ -65,10 +65,6 @@ func (s *Table) validate() error {
 		return err
 	}
 
-	if s.Table == "" {
-		return errors.New("table name required")
-	}
-
 	return nil
 }
 

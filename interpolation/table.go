@@ -84,7 +84,7 @@ func newTableData(ts *schema.Table, baseImportPath, rootDir string) (*TableData,
 		ImportPath: path.Join(baseImportPath, "internal", strings.ToLower(ts.Name)),
 		PkgVar:     strings.ToLower(ts.Name),
 
-		DataSource:     ts.Source,
+		DataSource:     ts.CSV,
 		CSVSeparator:   ts.Separator,
 		ComputePackage: ts.ComputePackage,
 		ComputePkgVar:  path.Base(ts.ComputePackage),

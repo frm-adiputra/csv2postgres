@@ -5,7 +5,6 @@ fields:
     type: varchar(3)
   - name: b
     type: text
-table: dependsOn
 dependsOn:
   - constraints
   - noValidator

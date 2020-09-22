@@ -5,4 +5,3 @@ fields:
     type: varchar(3)
   - name: b
     type: text
-table: noTable

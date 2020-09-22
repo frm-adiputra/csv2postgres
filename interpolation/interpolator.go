@@ -8,13 +8,14 @@ import (
 
 // Interpolator represents interpolator struct
 type Interpolator struct {
-	tablesData []*TableData
-	viewsData  []*ViewData
-	pdeps      *projectDeps
+	tablesData    []*TableData
+	viewsData     []*ViewData
+	pdeps         *projectDeps
+	defaultSchema string
 }
 
 // NewInterpolator returns a new interpolator
-func NewInterpolator(baseImportPath, rootDir string, ts []*schema.Table, vs []*schema.View) (*Interpolator, error) {
+func NewInterpolator(baseImportPath, rootDir, defaultSchema string, ts []*schema.Table, vs []*schema.View) (*Interpolator, error) {
 	var err error
 	pdeps, err := newProjectDeps(ts, vs)
 
@@ -32,9 +33,10 @@ func NewInterpolator(baseImportPath, rootDir string, ts []*schema.Table, vs []*s
 	}
 
 	return &Interpolator{
-		tablesData: lt,
-		viewsData:  vt,
-		pdeps:      pdeps,
+		tablesData:    lt,
+		viewsData:     vt,
+		pdeps:         pdeps,
+		defaultSchema: defaultSchema,
 	}, nil
 }
 

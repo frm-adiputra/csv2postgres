@@ -7,4 +7,3 @@ fields:
   - name: b
     type: text
     required: true
-table: requiredField

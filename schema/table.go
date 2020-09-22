@@ -64,7 +64,7 @@ type ComputedField struct {
 type Table struct {
 	*common.Names `yaml:"-"`
 	SpecFile      string `yaml:"-"`
-	Source        string
+	CSV           string `yaml:"csv"`
 	Separator     string
 
 	// Fields defined here will be included in data table.
@@ -77,12 +77,10 @@ type Table struct {
 	ComputePackage string `yaml:"computePackage"`
 
 	ComputedFields []*ComputedField `yaml:"computedFields,flow"`
-	Table          string
 
 	// DependsOn specifies other spec name that the table in this spec depends
 	// on.
-	DependsOn  []string `yaml:"dependsOn,flow"`
-	Dependants []string `yaml:"-"`
+	DependsOn []string `yaml:"dependsOn,flow"`
 
 	// Constraints sepecifies the table constraints. It must be written using
 	// syntax like in the table constraints of create table PostgreSQL clause.
@@ -90,7 +88,7 @@ type Table struct {
 }
 
 // NewTable creates a new table spec from a YAML file.
-func NewTable(specFile string) (*Table, error) {
+func NewTable(specFile, defaultSchema string) (*Table, error) {
 	f, err := os.Open(specFile)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
@@ -105,7 +103,7 @@ func NewTable(specFile string) (*Table, error) {
 	}
 
 	t.SpecFile = specFile
-	t.Names, err = common.NewNames(specFile)
+	t.Names, err = common.NewNames(specFile, defaultSchema)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}

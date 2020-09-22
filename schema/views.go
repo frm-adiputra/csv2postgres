@@ -24,7 +24,7 @@ type View struct {
 }
 
 // NewView creates a new view spec from a YAML file.
-func NewView(specFile string) (*View, error) {
+func NewView(specFile, defaultSchema string) (*View, error) {
 	f, err := os.Open(specFile)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
@@ -39,7 +39,7 @@ func NewView(specFile string) (*View, error) {
 	}
 
 	t.SpecFile = specFile
-	t.Names, err = common.NewNames(specFile)
+	t.Names, err = common.NewNames(specFile, defaultSchema)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}

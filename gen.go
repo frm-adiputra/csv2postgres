@@ -12,10 +12,16 @@ import (
 type Generator struct {
 	BaseImportPath string
 	RootDir        string
+	DefaultSchema  string
 }
 
 // Generate generates source codes based on spec
 func (g Generator) Generate() error {
+	defaultSchema := "public"
+	if g.DefaultSchema != "" {
+		defaultSchema = g.DefaultSchema
+	}
+
 	tableFiles, err := listYamlFiles("tables")
 	if err != nil {
 		return err
@@ -26,12 +32,12 @@ func (g Generator) Generate() error {
 		return err
 	}
 
-	tableSpecs, err := createTableSpecs(tableFiles)
+	tableSpecs, err := createTableSpecs(tableFiles, defaultSchema)
 	if err != nil {
 		return err
 	}
 
-	viewSpecs, err := createViewSpecs(viewFiles)
+	viewSpecs, err := createViewSpecs(viewFiles, defaultSchema)
 	if err != nil {
 		return err
 	}
@@ -41,7 +47,7 @@ func (g Generator) Generate() error {
 		rootDir = g.RootDir
 	}
 
-	i, err := interpolation.NewInterpolator(g.BaseImportPath, rootDir, tableSpecs, viewSpecs)
+	i, err := interpolation.NewInterpolator(g.BaseImportPath, rootDir, defaultSchema, tableSpecs, viewSpecs)
 	if err != nil {
 		return err
 	}
@@ -73,10 +79,10 @@ func listYamlFiles(rootPath string) ([]string, error) {
 	return files, nil
 }
 
-func createTableSpecs(tableFiles []string) ([]*schema.Table, error) {
+func createTableSpecs(tableFiles []string, defaultSchema string) ([]*schema.Table, error) {
 	specs := make([]*schema.Table, len(tableFiles))
 	for i, specFile := range tableFiles {
-		s, err := schema.NewTable(specFile)
+		s, err := schema.NewTable(specFile, defaultSchema)
 		if err != nil {
 			return nil, err
 		}
@@ -85,10 +91,10 @@ func createTableSpecs(tableFiles []string) ([]*schema.Table, error) {
 	return specs, nil
 }
 
-func createViewSpecs(viewFiles []string) ([]*schema.View, error) {
+func createViewSpecs(viewFiles []string, defaultSchema string) ([]*schema.View, error) {
 	specs := make([]*schema.View, len(viewFiles))
 	for i, specFile := range viewFiles {
-		s, err := schema.NewView(specFile)
+		s, err := schema.NewView(specFile, defaultSchema)
 		if err != nil {
 			return nil, err
 		}

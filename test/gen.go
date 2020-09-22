@@ -16,7 +16,11 @@ func main() {
 }
 
 func generateDemo() {
-	err := csv2postgres.Generate("github.com/frm-adiputra/csv2postgres/test/generated", "generated")
+	g := csv2postgres.Generator{
+		BaseImportPath: "github.com/frm-adiputra/csv2postgres/test/generated",
+		RootDir:        "generated",
+	}
+	err := g.Generate()
 	if err != nil {
 		exitWithError(err)
 	}
