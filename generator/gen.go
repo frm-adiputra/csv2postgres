@@ -4,18 +4,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/frm-adiputra/csv2postgres/interpolation"
 	"github.com/frm-adiputra/csv2postgres/schema"
 )
 
 // Generator specifies the generator configurations.
 type Generator struct {
 	BaseImportPath string
-	Tables         []string
-	Views          []string
+	RootDir        string
 }
 
 // Generate generates source codes based on spec
-func Generate(baseImportPath string) error {
+func (g Generator) Generate() error {
 	tableFiles, err := listYamlFiles("tables")
 	if err != nil {
 		return err
@@ -32,6 +32,21 @@ func Generate(baseImportPath string) error {
 	}
 
 	viewSpecs, err := createViewSpecs(viewFiles)
+	if err != nil {
+		return err
+	}
+
+	rootDir := "."
+	if g.RootDir != "" {
+		rootDir = g.RootDir
+	}
+
+	i, err := interpolation.NewInterpolator(g.BaseImportPath, rootDir, tableSpecs, viewSpecs)
+	if err != nil {
+		return err
+	}
+
+	err = i.Interpolate()
 	if err != nil {
 		return err
 	}

@@ -42,10 +42,6 @@ var (
 )
 
 func (s *Table) validate() error {
-	if s.Name == "" {
-		return errors.New("name is required")
-	}
-
 	if len(s.Separator) != 1 {
 		return errSeparator
 	}

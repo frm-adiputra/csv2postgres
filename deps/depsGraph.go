@@ -130,22 +130,22 @@ func reverse(numbers []int) []int {
 	return numbers
 }
 
-// DepsGraph specifies dependencies graph.
-type DepsGraph struct {
+// Graph specifies dependencies graph.
+type Graph struct {
 	store depsStore
 	deps  *dependencies
 }
 
-// NewDepsGraph returns a new DepsGraph.
-func NewDepsGraph(targets []string) *DepsGraph {
-	return &DepsGraph{
+// NewGraph returns a new Graph.
+func NewGraph(targets []string) *Graph {
+	return &Graph{
 		newDepsStore(targets),
 		newDependencies(len(targets)),
 	}
 }
 
 // DependsOn creates new dependency: a depends to b
-func (d *DepsGraph) DependsOn(a, b string) error {
+func (d *Graph) DependsOn(a, b string) error {
 	aIdx, ok := d.store.IndexOf(a)
 	if !ok {
 		return fmt.Errorf("unknown target: %s", a)
@@ -165,12 +165,12 @@ func (d *DepsGraph) DependsOn(a, b string) error {
 
 // Finalize finalizes dependency graph. Querying dependency order can only be
 // calculated if it has been finalizes.
-func (d *DepsGraph) Finalize() error {
+func (d *Graph) Finalize() error {
 	return d.deps.finalize()
 }
 
 // CreateOrderAll returns list of creation order.
-func (d DepsGraph) CreateOrderAll() (path []string) {
+func (d Graph) CreateOrderAll() (path []string) {
 	p := d.deps.createOrderAll()
 	path = make([]string, len(p))
 	for i, idx := range p {
@@ -184,7 +184,7 @@ func (d DepsGraph) CreateOrderAll() (path []string) {
 }
 
 // CreateOrder returns list of creation order for target.
-func (d DepsGraph) CreateOrder(target string) (path []string, err error) {
+func (d Graph) CreateOrder(target string) (path []string, err error) {
 	idx, ok := d.store.IndexOf(target)
 	if !ok {
 		return nil, fmt.Errorf("unknown target: %s", target)
@@ -203,7 +203,7 @@ func (d DepsGraph) CreateOrder(target string) (path []string, err error) {
 }
 
 // DropOrderAll returns list of deletion order.
-func (d DepsGraph) DropOrderAll() (path []string) {
+func (d Graph) DropOrderAll() (path []string) {
 	p := d.deps.dropOrderAll()
 	path = make([]string, len(p))
 	for i, idx := range p {
@@ -217,7 +217,7 @@ func (d DepsGraph) DropOrderAll() (path []string) {
 }
 
 // DropOrder returns list of deletion order for target.
-func (d DepsGraph) DropOrder(target string) (path []string, err error) {
+func (d Graph) DropOrder(target string) (path []string, err error) {
 	idx, ok := d.store.IndexOf(target)
 	if !ok {
 		return nil, fmt.Errorf("unknown target: %s", target)

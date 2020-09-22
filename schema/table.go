@@ -3,9 +3,8 @@ package schema
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
+	"github.com/frm-adiputra/csv2postgres/common"
 	"github.com/goccy/go-yaml"
 )
 
@@ -63,10 +62,10 @@ type ComputedField struct {
 
 // Table specifies how to process a CSV file
 type Table struct {
-	Name      string `yaml:"-"` // Must contain only letters and/or number. First character must be not a number
-	SpecFile  string `yaml:"-"`
-	Source    string
-	Separator string
+	*common.Names `yaml:"-"`
+	SpecFile      string `yaml:"-"`
+	Source        string
+	Separator     string
 
 	// Fields defined here will be included in data table.
 	// Fields not defined here will NOT included in data table.
@@ -94,7 +93,7 @@ type Table struct {
 func NewTable(specFile string) (*Table, error) {
 	f, err := os.Open(specFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}
 	defer f.Close()
 
@@ -102,12 +101,14 @@ func NewTable(specFile string) (*Table, error) {
 	d := yaml.NewDecoder(f)
 	err = d.Decode(t)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}
 
 	t.SpecFile = specFile
-	ns := strings.Split(filepath.Base(specFile), ".")
-	t.Name = strings.Join(ns[0:len(ns)-1], ".")
+	t.Names, err = common.NewNames(specFile)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
+	}
 
 	err = t.validate()
 	if err != nil {

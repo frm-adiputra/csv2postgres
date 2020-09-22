@@ -16,18 +16,7 @@ func main() {
 }
 
 func generateDemo() {
-	g := csv2postgres.Generator{
-		BaseImportPath: "github.com/frm-adiputra/csv2postgres/test/generated",
-		OutDir:         "generated",
-		Specs: []string{
-			"specs/noValidator.yaml",
-			"specs/requiredField.yaml",
-			"specs/constraints.yaml",
-			"specs/dependsOn.yaml",
-		},
-		Views: "specs/my.views.yaml",
-	}
-	err := g.Generate()
+	err := csv2postgres.Generate("github.com/frm-adiputra/csv2postgres/test/generated", "generated")
 	if err != nil {
 		exitWithError(err)
 	}

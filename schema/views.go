@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/frm-adiputra/csv2postgres/common"
 	"github.com/goccy/go-yaml"
 )
 
 // View specifies a database view
 type View struct {
-	SpecFile string `yaml:"-"`
+	*common.Names `yaml:"-"`
+	SpecFile      string `yaml:"-"`
 
 	DependsOn []string `yaml:"dependsOn"`
 
@@ -25,7 +27,7 @@ type View struct {
 func NewView(specFile string) (*View, error) {
 	f, err := os.Open(specFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}
 	defer f.Close()
 
@@ -33,10 +35,14 @@ func NewView(specFile string) (*View, error) {
 	d := yaml.NewDecoder(f)
 	err = d.Decode(t)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
 	}
 
 	t.SpecFile = specFile
+	t.Names, err = common.NewNames(specFile)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %s", specFile, err.Error())
+	}
 
 	err = t.validate()
 	if err != nil {
