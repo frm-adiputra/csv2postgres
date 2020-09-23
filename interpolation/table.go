@@ -3,6 +3,7 @@ package interpolation
 import (
 	"fmt"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/frm-adiputra/csv2postgres/common"
@@ -13,8 +14,10 @@ import (
 type TableData struct {
 	*common.Names
 
+	Generator  string
 	SpecFile   string
 	ImportPath string
+	PkgDir     string
 	PkgVar     string
 
 	DataSource     string
@@ -80,8 +83,10 @@ func newTableData(ts *schema.Table, baseImportPath, rootDir string) (*TableData,
 	return &TableData{
 		Names: ts.Names,
 
+		Generator:  "github.com/frm-adiputra/csv2postgres",
 		SpecFile:   ts.SpecFile,
 		ImportPath: path.Join(baseImportPath, "internal", strings.ToLower(ts.Name)),
+		PkgDir:     filepath.Join(rootDir, "internal", strings.ToLower(ts.Name)),
 		PkgVar:     strings.ToLower(ts.Name),
 
 		DataSource:     ts.CSV,

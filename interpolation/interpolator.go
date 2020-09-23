@@ -8,8 +8,9 @@ import (
 
 // Interpolator represents interpolator struct
 type Interpolator struct {
-	tablesData    []*TableData
-	viewsData     []*ViewData
+	Generator     string
+	TablesData    []*TableData
+	ViewsData     []*ViewData
 	pdeps         *projectDeps
 	defaultSchema string
 }
@@ -33,8 +34,9 @@ func NewInterpolator(baseImportPath, rootDir, defaultSchema string, ts []*schema
 	}
 
 	return &Interpolator{
-		tablesData:    lt,
-		viewsData:     vt,
+		Generator:     "github.com/frm-adiputra/csv2postgres",
+		TablesData:    lt,
+		ViewsData:     vt,
 		pdeps:         pdeps,
 		defaultSchema: defaultSchema,
 	}, nil
@@ -51,7 +53,7 @@ func (ip *Interpolator) Interpolate() error {
 
 func (ip Interpolator) checkDuplicateName() error {
 	m := make(map[string]bool)
-	for _, t := range ip.tablesData {
+	for _, t := range ip.TablesData {
 		_, found := m[t.FullName]
 		if found {
 			return fmt.Errorf("duplicate name '%s' in '%s'",
@@ -59,7 +61,7 @@ func (ip Interpolator) checkDuplicateName() error {
 		}
 		m[t.Name] = true
 	}
-	for _, v := range ip.viewsData {
+	for _, v := range ip.ViewsData {
 		_, found := m[v.FullName]
 		if found {
 			return fmt.Errorf("duplicate name '%s' in '%s'",
@@ -72,7 +74,7 @@ func (ip Interpolator) checkDuplicateName() error {
 
 func (ip *Interpolator) linkDependencies() error {
 	var err error
-	for _, t := range ip.tablesData {
+	for _, t := range ip.TablesData {
 		t.CreateDeps, err = ip.pdeps.createDependenciesData(t.FullName, false)
 		if err != nil {
 			return err
@@ -86,7 +88,7 @@ func (ip *Interpolator) linkDependencies() error {
 		t.DropDepsIncludeTable = hasTableDep(t.DropDeps)
 	}
 
-	for _, v := range ip.viewsData {
+	for _, v := range ip.ViewsData {
 		v.CreateDeps, err = ip.pdeps.createDependenciesData(v.FullName, false)
 		if err != nil {
 			return err

@@ -8,6 +8,7 @@ import (
 
 // Names represents entity names
 type Names struct {
+	RefName     string `yaml:"-"` // Name from filename, to be used on dependencies
 	Name        string `yaml:"-"`
 	SchemaName  string `yaml:"-"`
 	FullName    string `yaml:"-"`

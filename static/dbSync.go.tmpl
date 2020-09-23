@@ -40,17 +40,17 @@ func NewDBSynchronizer() DBSynchronizer {
 	}
 
     return DBSynchronizer{
-        name: "{{.Table.Name}}",
+        name: "{{.FullName}}",
         dependsOn: []string{
             {{- range .DependsOn}}
             `{{.}}`,
             {{- end}}
         },
         recordReader: r,
-        sqlDelete: `DELETE FROM {{.Table.QuotedFullName}}`,
-        sqlDrop: `DROP TABLE IF EXISTS {{.Table.QuotedFullName}}`,
+        sqlDelete: `DELETE FROM {{.SQLFullName}}`,
+        sqlDrop: `DROP TABLE IF EXISTS {{.SQLFullName}}`,
         sqlCreate: `
-            CREATE TABLE {{.Table.QuotedFullName}} (
+            CREATE TABLE {{.SQLFullName}} (
             {{- $first := true}}
             {{- range .Fields}}
                 {{- if not .Exclude}}
@@ -119,11 +119,11 @@ func (d DBSynchronizer) Fill(db *sql.DB) error {
 		return fmt.Errorf("%s: %w", d.recordReader.Name, err)
 	}
 
-    stmt, err := txn.Prepare(pq.{{if .Table.SchemaName}}CopyInSchema{{else}}CopyIn{{end}}(
-        {{- if .Table.SchemaName}}
-        "{{.Table.SchemaName}}",
+    stmt, err := txn.Prepare(pq.{{if .SchemaName}}CopyInSchema{{else}}CopyIn{{end}}(
+        {{- if .SchemaName}}
+        "{{.SchemaName}}",
         {{- end}}
-        "{{.Table.TableName}}",
+        "{{.Name}}",
         {{- range .Fields}}
         {{- if not .Exclude}}
         "{{.Name}}",

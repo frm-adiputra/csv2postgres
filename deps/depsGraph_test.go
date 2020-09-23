@@ -5,7 +5,7 @@ import (
 )
 
 func TestCsv2Postgres(t *testing.T) {
-	dg := NewDepsGraph([]string{
+	dg := NewGraph([]string{
 		"noValidator",
 		"constraints",
 		"dependsOn",

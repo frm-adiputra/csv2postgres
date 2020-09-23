@@ -57,6 +57,16 @@ func (g Generator) Generate() error {
 		return err
 	}
 
+	err = g.generateCommons(i)
+	if err != nil {
+		return err
+	}
+
+	err = g.generateTables(i.TablesData)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -109,6 +119,37 @@ func (g Generator) generateCommons(itp *interpolation.Interpolator) error {
 		"runner.go", itp)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (g Generator) generateTables(tds []*interpolation.TableData) error {
+	for _, std := range tds {
+
+		// create directory for package
+		err := os.MkdirAll(std.PkgDir, 0777)
+		if err != nil {
+			return err
+		}
+
+		// generate source codes
+		tmplNames := []string{
+			"csvReader.go",
+			"fieldProvider.go",
+			"converter.go",
+			"computer.go",
+			"validator.go",
+			"dbSync.go",
+		}
+
+		for _, tn := range tmplNames {
+			err = execTemplate(
+				filepath.Join(std.PkgDir, generatedFilename(tn)),
+				tn, std)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
