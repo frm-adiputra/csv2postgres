@@ -1,0 +1,60 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/urfave/cli/v2"
+)
+
+func main() {
+	var dryRun bool
+	dryRun = true
+
+	app := &cli.App{
+		Commands: []*cli.Command{
+			{
+				Name:    "allUp",
+				Usage:   "migrate all target",
+				Action: func(c *cli.Context) error {
+					return AllUp(dryRun)
+				},
+			},
+			{
+				Name:    "allDown",
+				Usage:   "rollback all target",
+				Action: func(c *cli.Context) error {
+					return AllDown(dryRun)
+				},
+			},
+			{
+				Name:    "template",
+				Aliases: []string{"t"},
+				Usage:   "options for task templates",
+				Subcommands: []*cli.Command{
+					{
+						Name:  "add",
+						Usage: "add a new template",
+						Action: func(c *cli.Context) error {
+							fmt.Println("new task template: ", c.Args().First())
+							return nil
+						},
+					},
+					{
+						Name:  "remove",
+						Usage: "remove an existing template",
+						Action: func(c *cli.Context) error {
+							fmt.Println("removed task template: ", c.Args().First())
+							return nil
+						},
+					},
+				},
+			},
+		},
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		exitWithError(err)
+	}
+}

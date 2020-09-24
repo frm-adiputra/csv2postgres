@@ -33,14 +33,19 @@ func init() {
 }
 {{range .TablesData}}
 // {{.TargetName}}Drop drops table {{.RefName}}
-func {{.TargetName}}Drop() error {
+func {{.TargetName}}Drop(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Dropping table...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Dropping table...")
     err = {{.PkgVar}}DB.Drop(db)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -52,23 +57,31 @@ func {{.TargetName}}Drop() error {
 
 // {{.TargetName}}DepDrop drops table {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepDrop() {
+func {{.TargetName}}DepDrop(dryRun bool) error {
     {{- if .DropDeps}}
     {{- range .DropDeps}}
-    {{.TargetName}}Drop() // {{.RefName}}
+    if err := {{.TargetName}}Drop(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
+    return nil
 }
 
 // {{.TargetName}}Create creates table {{.RefName}}
-func {{.TargetName}}Create() error {
+func {{.TargetName}}Create(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Creating table...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Creating table...")
     err = {{.PkgVar}}DB.Create(db)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -80,23 +93,31 @@ func {{.TargetName}}Create() error {
 
 // {{.TargetName}}DepCreate creates table {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepCreate() {
+func {{.TargetName}}DepCreate(dryRun bool) error {
     {{- if .CreateDeps}}
     {{- range .CreateDeps}}
-    {{.TargetName}}Create() // {{.RefName}}
+    if err := {{.TargetName}}Create(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
+    return nil
 }
 
 // {{.TargetName}}Delete deletes rows from table {{.RefName}}
-func {{.TargetName}}Delete() error {
+func {{.TargetName}}Delete(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Deleting table...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Deleting table...")
     err = {{.PkgVar}}DB.Delete(db)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -108,25 +129,33 @@ func {{.TargetName}}Delete() error {
 
 // {{.TargetName}}DepDelete deletes rows from table {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepDelete() {
+func {{.TargetName}}DepDelete(dryRun bool) error {
     {{- if .DropDepsIncludeTable}}
     {{- range .DropDeps}}
     {{- if .Table}}
-    {{.TargetName}}Delete() // {{.RefName}}
+    if err := {{.TargetName}}Delete(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
     {{- end}}
+    return nil
 }
 
 // {{.TargetName}}Fill fills rows of table {{.RefName}}
-func {{.TargetName}}Fill() error {
+func {{.TargetName}}Fill(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Filling table...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Filling table...")
     err = {{.PkgVar}}DB.Fill(db)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -138,39 +167,56 @@ func {{.TargetName}}Fill() error {
 
 // {{.TargetName}}DepFill fills rows of table {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepFill() {
+func {{.TargetName}}DepFill(dryRun bool) error {
     {{- if .CreateDepsIncludeTable}}
     {{- range .CreateDeps}}
     {{- if .Table}}
-    {{.TargetName}}Fill() // {{.RefName}}
+    if err := {{.TargetName}}Fill(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
     {{- end}}
+    return nil
 }
 
 // {{.TargetName}}Up recreates and fill rows of table {{.RefName}}
-func {{.TargetName}}Up() {
-    {{.TargetName}}DepDrop()
-    {{.TargetName}}DepCreate()
-    {{.TargetName}}DepFill()
+func {{.TargetName}}Up(dryRun bool) error {
+    if err := {{.TargetName}}DepDrop(dryRun); err != nil {
+        return err
+    }
+
+    if err := {{.TargetName}}DepCreate(dryRun); err != nil {
+        return err
+    }
+
+    if err := {{.TargetName}}DepFill(dryRun); err != nil {
+        return err
+    }
+    return nil
 }
 
 // {{.TargetName}}Down drops the table {{.RefName}} and its dependants
-func {{.TargetName}}Down() {
-    {{.TargetName}}DepDrop() // {{.RefName}}
+func {{.TargetName}}Down(dryRun bool) error {
+    return {{.TargetName}}DepDrop(dryRun)
 }
 {{- end}}
 {{- range .ViewsData}}
 
 // {{.TargetName}}Drop drops view {{.RefName}}
-func {{.TargetName}}Drop() error {
+func {{.TargetName}}Drop(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Dropping view...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Dropping view...")
     _, err = db.Exec(viewsql.{{.TargetName}}Drop)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -182,23 +228,31 @@ func {{.TargetName}}Drop() error {
 
 // {{.TargetName}}DepDrop drops view {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepDrop() {
+func {{.TargetName}}DepDrop(dryRun bool) error {
     {{- if .DropDeps}}
     {{- range .DropDeps}}
-    {{.TargetName}}Drop() // {{.RefName}}
+    if err := {{.TargetName}}Drop(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
+    return nil
 }
 
 // {{.TargetName}}Create creates view {{.RefName}}
-func {{.TargetName}}Create() error {
+func {{.TargetName}}Create(dryRun bool) error {
+    fmt.Print("{{.RefName}}: Creating view...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     db, err := newDBConn()
     if err != nil {
         return err
     }
     defer db.Close()
 
-    fmt.Print("{{.RefName}}: Creating view...")
     _, err = db.Exec(viewsql.{{.TargetName}}Create)
     if err != nil {
         fmt.Println("[FAILED]")
@@ -210,19 +264,27 @@ func {{.TargetName}}Create() error {
 
 // {{.TargetName}}DepCreate creates view {{.RefName}} after
 // executing all of its dependencies
-func {{.TargetName}}DepCreate() {
+func {{.TargetName}}DepCreate(dryRun bool) error {
     {{- if .CreateDeps}}
     {{- range .CreateDeps}}
-    {{.TargetName}}Create() // {{.RefName}}
+    if err := {{.TargetName}}Create(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
     {{- end}}
+    return nil
 }
 
 {{- if .Export}}
 
 // {{.TargetName}}Export exports view's query result to CSV.
-func {{.TargetName}}Export() error {
+func {{.TargetName}}Export(dryRun bool) error {
     fmt.Print("{{.RefName}}: Exporting to CSV...")
+    if dryRun {
+        fmt.Println("[OK]")
+        return nil
+    }
+
     dir := filepath.Dir(`{{.Export}}`)
     err := os.MkdirAll(dir, 0777)
 	if err != nil {
@@ -256,28 +318,40 @@ func {{.TargetName}}Export() error {
 {{- end}}
 
 // AllUp recreates and fill rows of all tables
-func AllUp() {
+func AllUp(dryRun bool) error {
 {{- range .DropDepsAll}}
-    {{.TargetName}}Drop() // {{.RefName}}
+    if err := {{.TargetName}}Drop(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
 {{- end}}
 {{- range .CreateDepsAll}}
-    {{.TargetName}}Create() // {{.RefName}}
+    if err := {{.TargetName}}Create(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
 {{- end}}
 {{- range .CreateDepsAll}}
     {{- if .Table}}
-    {{.TargetName}}Fill() // {{.RefName}}
+    if err := {{.TargetName}}Fill(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
 {{- end}}
 {{- range .CreateDepsAll}}
     {{- if .Export}}
-    {{.TargetName}}Export() // {{.RefName}}
+    if err := {{.TargetName}}Export(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
     {{- end}}
 {{- end}}
+    return nil
 }
 
 // AllDown drops all tables and its dependants
-func AllDown() {
+func AllDown(dryRun bool) error {
 {{- range .DropDepsAll}}
-    {{.TargetName}}Drop() // {{.RefName}}
+    if err := {{.TargetName}}Drop(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
 {{- end}}
+    return nil
 }

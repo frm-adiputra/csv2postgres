@@ -74,11 +74,6 @@ func (g Generator) Generate() error {
 		return err
 	}
 
-	err = g.generateTargets(i)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -126,11 +121,19 @@ func createViewSpecs(viewFiles []string, defaultSchema string) ([]*schema.View, 
 }
 
 func (g Generator) generateCommons(itp *interpolation.Interpolator) error {
-	err := execTemplate(
-		filepath.Join(g.RootDir, generatedFilename("runner.go")),
-		"runner.go", itp)
-	if err != nil {
-		return err
+	tmplNames := []string{
+		"runner.go",
+		"targets.go",
+		"main.go",
+	}
+
+	for _, tn := range tmplNames {
+		err := execTemplate(
+			filepath.Join(g.RootDir, generatedFilename(tn)),
+			tn, itp)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -179,16 +182,6 @@ func (g Generator) generateViews(vs []*interpolation.ViewData) error {
 	err = execTemplate(
 		filepath.Join(pkgDir, generatedFilename("view.go")),
 		"view.go", vs)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (g Generator) generateTargets(itp *interpolation.Interpolator) error {
-	err := execTemplate(
-		filepath.Join(g.RootDir, generatedFilename("targets.go")),
-		"targets.go", itp)
 	if err != nil {
 		return err
 	}

@@ -33,6 +33,7 @@ func init() {
 	addTemplate(tmpl, "dbSync.go", "/dbSync.go.tmpl")
 	addTemplate(tmpl, "targets.go", "/targets.go.tmpl")
 	addTemplate(tmpl, "view.go", "/view.go.tmpl")
+	addTemplate(tmpl, "main.go", "/main.go.tmpl")
 }
 
 func addTemplate(t *template.Template, name, path string) {
