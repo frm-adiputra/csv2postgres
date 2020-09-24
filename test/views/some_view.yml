@@ -1,6 +1,9 @@
+export: out/mymymy.csv
 dependsOn:
   - constraints
   - noValidator
+  - my.views
+  - myVwFirst
 sql: |
   SELECT *
   FROM

@@ -275,6 +275,20 @@ func {{.TargetName}}DepCreate(dryRun bool) error {
     return nil
 }
 
+// {{.TargetName}}DepFill fills rows of its dependencies
+func {{.TargetName}}DepFill(dryRun bool) error {
+    {{- if .CreateDepsIncludeTable}}
+    {{- range .CreateDeps}}
+    {{- if .Table}}
+    if err := {{.TargetName}}Fill(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
+    {{- end}}
+    {{- end}}
+    {{- end}}
+    return nil
+}
+
 {{- if .Export}}
 
 // {{.TargetName}}Export exports view's query result to CSV.
@@ -315,6 +329,46 @@ func {{.TargetName}}Export(dryRun bool) error {
     return nil
 }
 {{- end}}
+
+// {{.TargetName}}DepExport runs export on this view (if it has)
+// and its dependencies
+func {{.TargetName}}DepExport(dryRun bool) error {
+    {{- range .CreateDeps}}
+    {{- if .Export}}
+    if err := {{.TargetName}}Export(dryRun); err != nil { // {{.RefName}}
+        return err
+    }
+    {{- end}}
+    {{- end}}
+    return nil
+}
+
+// {{.TargetName}}Up recreates view {{.RefName}}
+func {{.TargetName}}Up(dryRun bool) error {
+    if err := {{.TargetName}}DepDrop(dryRun); err != nil {
+        return err
+    }
+
+    if err := {{.TargetName}}DepCreate(dryRun); err != nil {
+        return err
+    }
+
+    if err := {{.TargetName}}DepFill(dryRun); err != nil {
+        return err
+    }
+
+    {{- if .Export}}
+    if err := {{.TargetName}}DepExport(dryRun); err != nil {
+        return err
+    }
+    {{- end}}
+    return nil
+}
+
+// {{.TargetName}}Down drops view {{.RefName}} and its dependants
+func {{.TargetName}}Down(dryRun bool) error {
+    return {{.TargetName}}DepDrop(dryRun)
+}
 {{- end}}
 
 // AllUp recreates and fill rows of all tables

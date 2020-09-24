@@ -142,7 +142,6 @@ func (ip Interpolator) checkDuplicateName() error {
 }
 
 func (ip *Interpolator) linkDependencies() error {
-	fmt.Println(">>>> Link")
 	var err error
 	for _, t := range ip.TablesData {
 		t.CreateDeps, err = ip.pdeps.createDependenciesData(t.RefName, false)
@@ -167,6 +166,8 @@ func (ip *Interpolator) linkDependencies() error {
 		if err != nil {
 			return err
 		}
+		v.CreateDepsIncludeTable = hasTableDep(v.CreateDeps)
+		v.DropDepsIncludeTable = hasTableDep(v.DropDeps)
 	}
 	return nil
 }
