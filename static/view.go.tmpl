@@ -1,9 +1,11 @@
 package viewsql
 {{range .}}
-var {{toExportedName .Name}}Create = `
-CREATE VIEW "{{.Schema}}"."{{toSnake .Name}}" AS
-{{readFile .File -}}
+// {{toExportedName .TargetName}}Create contains SQL to create view {{.RefName}}
+var {{toExportedName .TargetName}}Create = `
+CREATE VIEW {{.SQLFullName}} AS
+{{.SQL -}}
 `
 
-var {{toExportedName .Name}}Drop = `DROP VIEW IF EXISTS "{{.Schema}}"."{{toSnake .Name}}"`
+// {{toExportedName .TargetName}}Drop contains SQL to drop view {{.RefName}}
+var {{toExportedName .TargetName}}Drop = `DROP VIEW IF EXISTS {{.SQLFullName}}`
 {{end}}

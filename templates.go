@@ -1,6 +1,7 @@
 package csv2postgres
 
 import (
+	"fmt"
 	"os"
 	"text/template"
 
@@ -42,16 +43,20 @@ func addTemplate(t *template.Template, name, path string) {
 }
 
 func execTemplate(fileName, templateName string, data interface{}) error {
+	fmt.Printf("Generating '%s' ...", fileName)
 	f, err := os.Create(fileName)
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 	defer f.Close()
 
 	err = tmpl.ExecuteTemplate(f, templateName, data)
 	if err != nil {
+		fmt.Println("[FAILED]")
 		return err
 	}
 
+	fmt.Println("[OK]")
 	return nil
 }

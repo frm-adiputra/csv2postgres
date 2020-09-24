@@ -57,12 +57,24 @@ func (g Generator) Generate() error {
 		return err
 	}
 
+	i.DisplayTargets()
+
 	err = g.generateCommons(i)
 	if err != nil {
 		return err
 	}
 
 	err = g.generateTables(i.TablesData)
+	if err != nil {
+		return err
+	}
+
+	err = g.generateViews(i.ViewsData)
+	if err != nil {
+		return err
+	}
+
+	err = g.generateTargets(i)
 	if err != nil {
 		return err
 	}
@@ -125,9 +137,11 @@ func (g Generator) generateCommons(itp *interpolation.Interpolator) error {
 
 func (g Generator) generateTables(tds []*interpolation.TableData) error {
 	for _, std := range tds {
+		parentDir := std.PkgDir()
+		// parentDir := std.TargetName
 
 		// create directory for package
-		err := os.MkdirAll(std.PkgDir, 0777)
+		err := os.MkdirAll(parentDir, 0777)
 		if err != nil {
 			return err
 		}
@@ -144,12 +158,39 @@ func (g Generator) generateTables(tds []*interpolation.TableData) error {
 
 		for _, tn := range tmplNames {
 			err = execTemplate(
-				filepath.Join(std.PkgDir, generatedFilename(tn)),
+				filepath.Join(parentDir, generatedFilename(tn)),
 				tn, std)
 			if err != nil {
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+func (g Generator) generateViews(vs []*interpolation.ViewData) error {
+	// create directory for package
+	pkgDir := filepath.Join(g.RootDir, "internal", "viewsql")
+	err := os.MkdirAll(pkgDir, 0777)
+	if err != nil {
+		return err
+	}
+
+	err = execTemplate(
+		filepath.Join(pkgDir, generatedFilename("view.go")),
+		"view.go", vs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g Generator) generateTargets(itp *interpolation.Interpolator) error {
+	err := execTemplate(
+		filepath.Join(g.RootDir, generatedFilename("targets.go")),
+		"targets.go", itp)
+	if err != nil {
+		return err
 	}
 	return nil
 }

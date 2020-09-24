@@ -9,26 +9,28 @@ type projectDeps struct {
 	graph           *deps.Graph
 	targetIsTable   map[string]bool
 	targetHasExport map[string]bool
+	nameToTarget    map[string]string
 }
 
 type dependencyData struct {
-	Name   string
-	Table  bool
-	Export bool
+	RefName    string
+	TargetName string
+	Table      bool
+	Export     bool
 }
 
-func newProjectDeps(ts []*schema.Table, vs []*schema.View) (*projectDeps, error) {
+func newProjectDeps(ts []*schema.Table, vs []*schema.View, nameToTarget map[string]string) (*projectDeps, error) {
 	targets := make([]string, 0, len(ts)+len(vs))
 	targetIsTable := make(map[string]bool)
 	targetHasExport := make(map[string]bool)
 	for _, s := range ts {
-		targets = append(targets, s.Name)
-		targetIsTable[s.Name] = true
+		targets = append(targets, s.RefName)
+		targetIsTable[s.RefName] = true
 	}
 	for _, v := range vs {
-		targets = append(targets, v.Name)
+		targets = append(targets, v.RefName)
 		if v.Export != "" {
-			targetHasExport[v.Name] = true
+			targetHasExport[v.RefName] = true
 		}
 	}
 
@@ -36,7 +38,7 @@ func newProjectDeps(ts []*schema.Table, vs []*schema.View) (*projectDeps, error)
 
 	for _, s := range ts {
 		for _, ds := range s.DependsOn {
-			err := d.DependsOn(s.Name, ds)
+			err := d.DependsOn(s.RefName, ds)
 			if err != nil {
 				return nil, err
 			}
@@ -45,7 +47,7 @@ func newProjectDeps(ts []*schema.Table, vs []*schema.View) (*projectDeps, error)
 
 	for _, s := range vs {
 		for _, ds := range s.DependsOn {
-			err := d.DependsOn(s.Name, ds)
+			err := d.DependsOn(s.RefName, ds)
 			if err != nil {
 				return nil, err
 			}
@@ -59,6 +61,7 @@ func newProjectDeps(ts []*schema.Table, vs []*schema.View) (*projectDeps, error)
 
 	return &projectDeps{
 		graph:           d,
+		nameToTarget:    nameToTarget,
 		targetIsTable:   targetIsTable,
 		targetHasExport: targetHasExport,
 	}, nil
@@ -83,10 +86,38 @@ func (p projectDeps) createDependenciesData(name string, drop bool) ([]dependenc
 		_, isTable := p.targetIsTable[v]
 		_, isExport := p.targetHasExport[v]
 		l[i] = dependencyData{
-			Name:   v,
-			Table:  isTable,
-			Export: isExport,
+			RefName:    v,
+			TargetName: p.nameToTarget[v],
+			Table:      isTable,
+			Export:     isExport,
 		}
 	}
 	return l, nil
+}
+
+func (p projectDeps) createAllDependenciesData(drop bool) []dependencyData {
+	var deps []string
+
+	if drop {
+		deps = p.graph.DropOrderAll()
+	} else {
+		deps = p.graph.CreateOrderAll()
+	}
+
+	l := make([]dependencyData, len(deps))
+	for i, v := range deps {
+		_, isTable := p.targetIsTable[v]
+		_, isExport := p.targetHasExport[v]
+		l[i] = dependencyData{
+			RefName:    v,
+			TargetName: p.nameToTarget[v],
+			Table:      isTable,
+			Export:     isExport,
+		}
+	}
+	return l
+}
+
+func (p projectDeps) HasExport() bool {
+	return len(p.targetHasExport) != 0
 }

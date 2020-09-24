@@ -14,11 +14,11 @@ import (
 type TableData struct {
 	*common.Names
 
-	Generator  string
-	SpecFile   string
-	ImportPath string
-	PkgDir     string
-	PkgVar     string
+	rootDir        string
+	baseImportPath string
+
+	Generator string
+	SpecFile  string
 
 	DataSource     string
 	CSVSeparator   string
@@ -83,11 +83,11 @@ func newTableData(ts *schema.Table, baseImportPath, rootDir string) (*TableData,
 	return &TableData{
 		Names: ts.Names,
 
-		Generator:  "github.com/frm-adiputra/csv2postgres",
-		SpecFile:   ts.SpecFile,
-		ImportPath: path.Join(baseImportPath, "internal", strings.ToLower(ts.Name)),
-		PkgDir:     filepath.Join(rootDir, "internal", strings.ToLower(ts.Name)),
-		PkgVar:     strings.ToLower(ts.Name),
+		rootDir:        rootDir,
+		baseImportPath: baseImportPath,
+
+		Generator: "github.com/frm-adiputra/csv2postgres",
+		SpecFile:  ts.SpecFile,
 
 		DataSource:     ts.CSV,
 		CSVSeparator:   ts.Separator,
@@ -105,6 +105,21 @@ func newTableData(ts *schema.Table, baseImportPath, rootDir string) (*TableData,
 		RequireTimePkg:    requireTimePkg(fields),
 		HasValidation:     hasValidation(ts.Fields, ts.ComputedFields),
 	}, nil
+}
+
+// ImportPath returns this table import path
+func (t TableData) ImportPath() string {
+	return path.Join(t.baseImportPath, "internal", strings.ToLower(t.TargetName))
+}
+
+// PkgDir returns this table package directory
+func (t TableData) PkgDir() string {
+	return filepath.Join(t.rootDir, "internal", strings.ToLower(t.TargetName))
+}
+
+// PkgVar returns this table package variable
+func (t TableData) PkgVar() string {
+	return strings.ToLower(t.TargetName)
 }
 
 func newFieldsData(fs []*schema.Field) ([]*FieldData, error) {
