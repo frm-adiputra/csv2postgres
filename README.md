@@ -36,6 +36,8 @@ The first is `main.go` with content like this.
 package main
 
 //go:generate go run gen.go
+//go:generate go fmt .
+//go:generate go fmt ./internal/...
 ```
 
 The `main.go` file will be used to setup the go generate command.
