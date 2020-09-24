@@ -71,3 +71,6 @@ func main() {
 ```
 
 ## Running the project
+
+1. Run `go generate` on your project root directory
+2. Run `go run . help` on your project root to show available targets

@@ -11,6 +11,14 @@ func main() {
 	dryRun = true
 
 	app := &cli.App{
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name: "dry-run",
+				Usage: "run target without actually execute it",
+				Value: false,
+				Destination: &dryRun,
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name:    "allUp",
