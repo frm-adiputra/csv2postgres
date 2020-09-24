@@ -12,21 +12,12 @@ import (
 )
 
 func main() {
-	generateDemo()
-}
-
-func generateDemo() {
 	g := csv2postgres.Generator{
 		BaseImportPath: "github.com/frm-adiputra/csv2postgres/test/generated",
 		RootDir:        "generated",
 	}
-	err := g.Generate()
-	if err != nil {
-		exitWithError(err)
+	if err := g.Generate(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-}
-
-func exitWithError(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
 }
