@@ -1,4 +1,4 @@
 # TODO
 
 - [x] Cyclic dependencies, generator should returns error
-- [ ] Conventions on naming things (tables, views, schema) and how the related packages should be named
+- [x] Conventions on naming things (tables, views, schema) and how the related packages should be named
