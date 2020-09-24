@@ -220,7 +220,7 @@ func {{.TargetName}}DepCreate() {
 
 {{- if .Export}}
 
-// Export exports view's query result to CSV.
+// {{.TargetName}}Export exports view's query result to CSV.
 func {{.TargetName}}Export() error {
     fmt.Print("{{.RefName}}: Exporting to CSV...")
     dir := filepath.Dir(`{{.Export}}`)
